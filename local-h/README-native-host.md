@@ -1,6 +1,6 @@
 # 本机服务器助手（Native Messaging Host）安装说明
 
-H Local 扩展通过 Edge/Chrome 的 Native Messaging 机制拉起本机助手，
+Hypothesis 增强版扩展通过 Edge/Chrome 的 Native Messaging 机制拉起本机助手，
 助手再以脱离进程方式运行 `server.mjs`（局域网批注服务器）。安装后打开侧栏
 顶部的**分享面板**，在官方公网链接下方点**创建局域网房间**（或使用「用户
 菜单 → 局域网服务器… → 启动房间」）即可；每台想当房间主机的机器安装一次
@@ -9,7 +9,7 @@ H Local 扩展通过 Edge/Chrome 的 Native Messaging 机制拉起本机助手�
 ## 安装（macOS + Edge）
 
 推荐用仓库里的安装脚本，一条命令即可（`<扩展ID>` 在
-`edge://extensions` 的 H Local 卡片上可见）：
+`edge://extensions` 的 Hypothesis 增强版卡片上可见）：
 
 ```sh
 ./local-h/install-native-host.sh <扩展ID>
@@ -43,7 +43,7 @@ H Local 扩展通过 Edge/Chrome 的 Native Messaging 机制拉起本机助手�
    chmod +x "$DIR/hlocal-server-wrapper"
    ```
 
-4. 注册给 Edge（`<扩展ID>` 是该机器上 H Local 解压扩展的 ID，
+4. 注册给 Edge（`<扩展ID>` 是该机器上 Hypothesis 增强版解压扩展的 ID，
    `edge://extensions` 里可见）：
 
    ```sh
@@ -52,7 +52,7 @@ H Local 扩展通过 Edge/Chrome 的 Native Messaging 机制拉起本机助手�
    cat > "$EDGE_HOSTS/com.hlocal.server.json" <<EOF
    {
      "name": "com.hlocal.server",
-     "description": "H Local 局域网批注服务器（由扩展一键启动）",
+     "description": "Hypothesis 增强版局域网批注服务器（由扩展一键启动）",
      "path": "$DIR/hlocal-server-wrapper",
      "type": "stdio",
      "allowed_origins": [
@@ -82,3 +82,5 @@ node e2e/native-host-test.mjs   # 期望输出 NATIVE HOST TEST PASSED
 
 - 房间数据：`~/Library/Application Support/H Local/annotations.json`
 - 助手日志：`~/Library/Application Support/H Local/native-host.log`
+
+> 注：上述目录名和 `com.hlocal.server` 为旧版内部标识，为保证已安装用户的数据与配置兼容，暂未改名。

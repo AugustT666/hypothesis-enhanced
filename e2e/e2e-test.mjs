@@ -1,5 +1,5 @@
 /**
- * End-to-end test for the H Local fork:
+ * End-to-end test for Hypothesis Enhanced:
  *
  * 1. Serves the built client + a test page with an image and text blocks.
  * 2. Loads the page in headless Chromium.

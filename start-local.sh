@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 启动 H Local 本地注释服务（免登录）。
+# 启动 Hypothesis 增强版本地注释服务（免登录）。
 set -euo pipefail
 
 cd "$(dirname "$0")"

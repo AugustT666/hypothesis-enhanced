@@ -1,24 +1,25 @@
-# H Local — 无需登录、无需服务器的网页文字 + 网页图片批注（Hypothesis 魔改版）
+# Hypothesis 增强版 — 免登录本地模式、网页图片批注与局域网协作
 
-基于开源项目 [hypothesis/client](https://github.com/hypothesis/client) 和
+本项目基于官方 [hypothesis/client](https://github.com/hypothesis/client) 与
 [hypothesis/browser-extension](https://github.com/hypothesis/browser-extension)
-魔改的自用版本，两个改动：
+二次开发。当前默认构建为免登录本地模式，并在官方功能基础上增加：
 
-1. **支持对网页图片（`<img>` 元素）的框选/打点批注**
-   （借鉴官方 PDF 图片批注的实现：`ShapeSelector` + 画框工具 + 形状高亮 + 侧栏缩略图）。
-2. **无需登录、无需本地服务**：批注数据直接存在浏览器扩展自己的
-   `localStorage` 里（同一扩展源所有标签页共享、刷新不丢），客户端
-   `localApi` 模式下所有 API 调用走浏览器本地存储，完全离线可用。
+1. **网页图片 / 元素批注**：支持对网页中的图片、段落、卡片等元素
+   进行框选与打点批注（官方仅支持 PDF 内图片批注）。
+2. **免登录本地模式**：默认构建无需账号，批注保存在扩展自身的
+   `localStorage` 中，可完全离线使用。
+3. **局域网协作**：可一键创建或加入局域网房间，多台设备实时同步批注。
 
-> 官方版只支持 PDF 内的图片批注（`pdf_image_annotation`），
-> 网页图片批注多年来一直是社区呼声很高但未实现的功能。
-> 本仓库把它补齐，并把锚定方式照搬了 PDF 那套（见下文"实现说明"）。
+官方账号登录与在线服务代码仍保留，可通过官方 settings 构建官方模式；
+本仓库的一键构建默认产出“增强版本地模式”安装包。
+
+> 本项目为 Hypothes.is 官方项目的非官方二次开发版本。
 
 ## 目录结构
 
 ```
-client/              魔改后的 hypothesis/client（核心改动都在这里）
-browser-extension/   魔改后的 hypothesis/browser-extension（打包成 Chrome/Edge 扩展）
+client/              二次开发后的 hypothesis/client（核心改动都在这里）
+browser-extension/   二次开发后的 hypothesis/browser-extension（打包成 Chrome/Edge 扩展）
 local-h/             可选的极简注释服务（团队共享/多机同步时才需要，零依赖）
 e2e/                 端到端验证（真实 Chromium 自动画框批注）
 build-all.sh         一键构建脚本
@@ -32,7 +33,7 @@ build-all.sh         一键构建脚本
 ./build-all.sh
 ```
 
-产物：`browser-extension/dist/h-local.zip`（解压后可作为未打包扩展加载），
+产物：`browser-extension/dist/hypothesis-enhanced.zip`（解压后可作为未打包扩展加载），
 或直接使用 `browser-extension/build/` 目录。
 
 ### 2. 安装到 Edge / Chrome（3 步，约 10 秒）
@@ -81,7 +82,7 @@ build-all.sh         一键构建脚本
 
 之后所有人的批注实时同步：新批注以「有新更新」横幅提示，点击即应用；
 删除也会实时传播。停止房间 = 同一对话框里的「停止房间」。房间数据保存在
-主机 `~/Library/Application Support/H Local/annotations.json`。
+主机数据文件为 `~/Library/Application Support/H Local/annotations.json`（目录名沿用旧版内部名，未改）。
 
 **Tailscale（跨局域网共享）**：分享面板列出的地址同时包含 Tailscale 网段
 （100.64.0.0/10，如 `http://100.x.x.x:8123`）。把这个链接发给同一
@@ -190,7 +191,7 @@ node .yarn/releases/yarn-3.6.0.cjs run build
 # browser-extension
 cd browser-extension && node .yarn/releases/yarn-3.6.1.cjs install
 make build SETTINGS_FILE=settings/chrome-local.json
-make dist/h-local.zip SETTINGS_FILE=settings/chrome-local.json
+make dist/hypothesis-enhanced.zip SETTINGS_FILE=settings/chrome-local.json
 ```
 
 ## 测试

@@ -1,7 +1,7 @@
 {
   "name": "hypothesis",
   "version": "1.0.0-dummy-version",
-  "description": "Annotate with anyone, anywhere.",
+  "description": "Hypothesis Enhanced client (unofficial fork).",
   "license": "BSD-2-Clause",
   "homepage": "https://hypothes.is",
   "bugs": "https://github.com/hypothesis/client/issues",

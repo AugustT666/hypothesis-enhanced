@@ -1,5 +1,5 @@
 /**
- * Live-site smoke test: injects the H Local client into a real web page
+ * Live-site smoke test: injects the Hypothesis Enhanced client into a real web page
  * (default: https://diidea.pku.edu.cn/competition2026/) and runs the
  * element-pick rect + pin flows against it, like the browser extension does.
  *

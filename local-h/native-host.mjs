@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Native messaging host for the H Local browser extension (Edge/Chrome).
+ * Native messaging host for the Hypothesis Enhanced browser extension (Edge/Chrome).
  *
  * The extension launches this helper with one message per invocation and the
  * helper manages the LAN annotation server (`server.mjs`) as a detached

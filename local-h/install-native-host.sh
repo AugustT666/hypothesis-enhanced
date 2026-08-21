@@ -12,7 +12,7 @@ EXT_ID="${1:-}"
 if [[ -z "$EXT_ID" ]]; then
   echo "用法: $0 <扩展ID>" >&2
   echo "" >&2
-  echo "扩展 ID 在 edge://extensions（或 chrome://extensions）里，H Local" >&2
+  echo "扩展 ID 在 edge://extensions（或 chrome://extensions）里，Hypothesis 增强版" >&2
   echo "卡片的 ID 一栏可以看到，通常是 32 位小写字母 a-p。" >&2
   exit 1
 fi
@@ -49,7 +49,7 @@ write_manifest() {
   cat > "$manifest_dir/com.hlocal.server.json" <<EOF
 {
   "name": "com.hlocal.server",
-  "description": "H Local 局域网批注服务器（由扩展一键启动）",
+  "description": "Hypothesis 增强版局域网批注服务器（由扩展一键启动）",
   "path": "$DATA_DIR/hlocal-server-wrapper",
   "type": "stdio",
   "allowed_origins": [

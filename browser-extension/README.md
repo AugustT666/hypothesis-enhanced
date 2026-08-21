@@ -1,11 +1,12 @@
-# Hypothesis browser extension(s)
+# Hypothesis 增强版浏览器扩展
 
 [![BSD licensed](https://img.shields.io/badge/license-BSD-blue.svg)][license]
 
 [license]: https://github.com/hypothesis/browser-extension/blob/main/LICENSE
 
-The Hypothesis browser extensions allow you to annotate web documents using your
-[Hypothesis][service] account.
+基于官方 [Hypothesis browser extension](https://github.com/hypothesis/browser-extension)
+二次开发的浏览器扩展。默认构建为免登录本地模式，并增加网页图片批注与局域网协作；
+官方账号登录与在线服务代码仍保留。
 
 ![Screenshot of Hypothesis client](/images/screenshot.png?raw=true)
 

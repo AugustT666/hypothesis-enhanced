@@ -13,6 +13,10 @@ pages. It’s a client for the [Hypothesis web annotation service][service].
 It’s used by the [Hypothesis browser extension][ext], and can also be
 [embedded directly into web pages][embed].
 
+> This directory is part of **Hypothesis Enhanced**（Hypothesis 增强版）, an
+> unofficial fork which adds a default no-login local mode, web-page image
+> annotation and LAN collaboration on top of the official client.
+
 ![Screenshot of Hypothesis client](/images/screenshot.png?raw=true)
 
 [service]: https://github.com/hypothesis/h
