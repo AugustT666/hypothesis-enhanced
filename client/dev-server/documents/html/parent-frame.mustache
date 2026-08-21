@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Annotatable iframe test</title>
+    <style>
+      body {
+        font-family: sans-serif;
+      }
+      iframe {
+        width: 100%;
+        height: 400px;
+        resize: both;
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Annotatable iframe test</h1>
+    <p>
+      The iframe below has an `enable-annotation` attribute. The client detects
+      and injects the annotator into the iframe, which makes the iframe content
+      annotatable.
+    </p>
+
+    <div class="toolbar">
+      <button class="js-toggle-button">Toggle frame</button>
+      <button id="prev-page" disabled>Prev page</button>
+      <button id="next-page">Next page</button>
+    </div>
+
+    <iframe enable-annotation src="/document/injectable-frame?page=1"></iframe>
+    {{{hypothesisScript}}}
+
+    <script type="module">
+      const toggleButton = document.querySelector('.js-toggle-button');
+      toggleButton.onclick = () => {
+        const frame = document.querySelector('iframe');
+        if (frame) {
+          frame.remove();
+        } else {
+          const newFrame = document.createElement('iframe');
+          newFrame.src = '/document/injectable-frame';
+          newFrame.setAttribute('enable-annotation', '');
+          document.body.append(newFrame);
+        }
+      };
+
+      const prevPageButton = document.querySelector('#prev-page');
+      const nextPageButton = document.querySelector('#next-page');
+
+      const stepPage = (step) => {
+        const iframe = document.querySelector('iframe[enable-annotation]');
+        const maxPage = 5;
+        const url = new URL(iframe.src);
+        const currentPage = parseInt(url.searchParams.get('page')) || 1;
+        const nextPage = Math.max(1, Math.min(currentPage + step, maxPage));
+        url.searchParams.set('page', nextPage);
+        iframe.src = url.toString();
+
+        prevPageButton.disabled = nextPage === 1;
+        nextPageButton.disabled = nextPage === maxPage;
+      };
+
+      prevPageButton.onclick = () => stepPage(-1);
+      nextPageButton.onclick = () => stepPage(1);
+    </script>
+  </body>
+</html>

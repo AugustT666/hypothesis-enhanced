@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Hypothesis Extension Settings</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, 'PingFang SC',
+        'Microsoft YaHei', sans-serif;
+    }
+    .hint {
+      font-size: 90%;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #ddd;
+      margin: 24px 0;
+    }
+    #lan-status {
+      font-size: 90%;
+      color: #555;
+    }
+    #lan-reset {
+      padding: 6px 14px;
+      background: #bd1c2b;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #lan-reset:hover {
+      background: #a31824;
+    }
+    #lan-reset-done {
+      color: #1a7f37;
+      font-weight: 500;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <input type="checkbox" id="badge">
+    <label for="badge">Enable extension badge</label>
+    <p class="hint">
+        By default, the extension button displays the number of annotations found
+        on the pages you visit. Disable this if you find the badge distracting or
+        if you do not wish the extension to make requests to the Hypothesis
+        service for this data.
+    </p>
+
+    <hr />
+
+    <h2>局域网共享</h2>
+    <p id="lan-status">正在检查局域网设置…</p>
+    <p>
+      <button id="lan-reset" type="button">清除局域网服务器设置</button>
+      <span id="lan-reset-done" hidden>✅ 已清除，已恢复本地模式。</span>
+    </p>
+    <p class="hint">
+      如果侧边栏打开后一直空白、加载不出来，通常是之前开启过「局域网房间」，
+      扩展记住了局域网服务器地址，但该服务器已经停止。点击上面的按钮清除设置即可恢复；
+      之后仍可从 Share 面板重新创建或加入局域网房间。
+    </p>
+
+    <script type="module" src="options.js"></script>
+  </main>
+</body>
+</html>

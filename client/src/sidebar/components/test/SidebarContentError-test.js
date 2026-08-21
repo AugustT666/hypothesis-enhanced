@@ -1,0 +1,204 @@
+import {
+  checkAccessibility,
+  mockImportedComponents,
+} from '@hypothesis/frontend-testing';
+import { mount } from '@hypothesis/frontend-testing';
+import sinon from 'sinon';
+
+import SidebarContentError from '../SidebarContentError';
+import { $imports } from '../SidebarContentError';
+
+describe('SidebarContentError', () => {
+  let fakeStore;
+
+  const createComponent = props => {
+    return mount(
+      <SidebarContentError
+        errorType="annotation"
+        onLoginRequest={sinon.stub()}
+        settings={{}}
+        {...props}
+      />,
+    );
+  };
+
+  beforeEach(() => {
+    fakeStore = {
+      clearSelection: sinon.stub(),
+      isLoggedIn: sinon.stub().returns(true),
+    };
+    $imports.$mock({
+      '../store': { useSidebarStore: () => fakeStore },
+    });
+    $imports.$mock(mockImportedComponents());
+  });
+
+  afterEach(() => {
+    $imports.$restore();
+  });
+
+  const findButtonByText = (wrapper, text) => {
+    return wrapper
+      .find('button')
+      .filterWhere(button => button.text() === text)
+      .at(0);
+  };
+
+  it.each([
+    { commentsMode: false, buttonText: 'Show all annotations' },
+    { commentsMode: true, buttonText: 'Show all comments' },
+  ])(
+    'should provide a button to clear the selection',
+    ({ commentsMode, buttonText }) => {
+      const fakeOnLogin = sinon.stub();
+      const wrapper = createComponent({
+        onLoginRequest: fakeOnLogin,
+        showClearSelection: true,
+        settings: { commentsMode },
+      });
+
+      const clearButton = findButtonByText(wrapper, buttonText);
+
+      assert.isTrue(clearButton.exists());
+
+      clearButton.props().onClick();
+      assert.called(fakeStore.clearSelection);
+    },
+  );
+
+  context('unavailable annotation, logged out', () => {
+    it('should display error text about unavailable annotation', () => {
+      fakeStore.isLoggedIn.returns(false);
+
+      const wrapper = createComponent();
+
+      assert.include(
+        wrapper.text(),
+        'The annotation associated with the current URL is unavailable',
+      );
+      assert.include(wrapper.text(), 'You may need to log in');
+    });
+
+    it('should render a log in button', () => {
+      fakeStore.isLoggedIn.returns(false);
+      const fakeOnLogin = sinon.stub();
+
+      const wrapper = createComponent({ onLoginRequest: fakeOnLogin });
+      const loginButton = findButtonByText(wrapper, 'Log in');
+
+      assert.isTrue(loginButton.exists());
+      assert.equal(loginButton.props().onClick, fakeOnLogin);
+    });
+  });
+
+  context('unavailable annotation/comment, logged in', () => {
+    beforeEach(() => {
+      fakeStore.isLoggedIn.returns(true);
+    });
+
+    it.each([
+      {
+        commentsMode: false,
+        expectedTitle: 'Annotation unavailable',
+        expectedText:
+          'The current URL links to an annotation, but that annotation cannot be found',
+      },
+      {
+        commentsMode: true,
+        expectedTitle: 'Comment unavailable',
+        expectedText:
+          'The current URL links to a comment, but that comment cannot be found',
+      },
+    ])(
+      'should display error text about unavailable annotation/comment',
+      ({ commentsMode, expectedTitle, expectedText }) => {
+        const wrapper = createComponent({
+          settings: { commentsMode },
+        });
+
+        const normalizedText = wrapper
+          .text()
+          // Replace newlines with spaces
+          .replace('\n', ' ')
+          // Replace groups of multiple spaces with a single space
+          .replace(/\s+/g, ' ');
+
+        assert.include(normalizedText, expectedTitle);
+        assert.include(normalizedText, expectedText);
+        assert.notInclude(normalizedText, 'You may need to log in');
+      },
+    );
+
+    it('should not provide an option to log in', () => {
+      const wrapper = createComponent();
+      const loginButton = findButtonByText(wrapper, 'Log in');
+
+      assert.isFalse(loginButton.exists());
+    });
+  });
+
+  context('unavailable group, logged out', () => {
+    it('should display error text about unavailable group', () => {
+      fakeStore.isLoggedIn.returns(false);
+
+      const wrapper = createComponent({ errorType: 'group' });
+
+      assert.include(
+        wrapper.text(),
+        'The group associated with the current URL is unavailable',
+      );
+      assert.include(wrapper.text(), 'You may need to log in');
+    });
+
+    it('should provide option to log in', () => {
+      fakeStore.isLoggedIn.returns(false);
+
+      const wrapper = createComponent({ errorType: 'group' });
+      const loginButton = findButtonByText(wrapper, 'Log in');
+
+      assert.isTrue(loginButton.exists());
+    });
+  });
+
+  context('unavailable group, logged in', () => {
+    it('should display error text about unavailable group', () => {
+      fakeStore.isLoggedIn.returns(true);
+
+      const wrapper = createComponent({ errorType: 'group' });
+
+      assert.include(
+        wrapper.text(),
+        'The current URL links to a group, but that group',
+      );
+      assert.notInclude(wrapper.text(), 'You may need to log in');
+    });
+
+    it('should not provide an option to log in', () => {
+      fakeStore.isLoggedIn.returns(true);
+
+      const wrapper = createComponent({ errorType: 'group' });
+      const loginButton = findButtonByText(wrapper, 'Log in');
+
+      assert.isFalse(loginButton.exists());
+    });
+  });
+
+  it(
+    'should pass a11y checks',
+    checkAccessibility([
+      {
+        name: 'logged out',
+        content: () => {
+          fakeStore.isLoggedIn.returns(false);
+          return createComponent();
+        },
+      },
+      {
+        name: 'logged in',
+        content: () => {
+          return createComponent();
+        },
+      },
+    ]),
+  );
+});

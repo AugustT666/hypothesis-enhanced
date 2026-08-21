@@ -1,0 +1,68 @@
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>重置局域网模式 - H Local</title>
+    <style>
+      body {
+        font-family: 'Helvetica Neue', Helvetica, Arial, 'PingFang SC',
+          'Microsoft YaHei', sans-serif;
+        font-weight: 300;
+        font-size: 16px;
+        margin: 0;
+        color: #202122;
+      }
+      .container {
+        width: 640px;
+        margin: 60px auto;
+        line-height: 1.6;
+      }
+      button {
+        font-size: 16px;
+        padding: 10px 24px;
+        background: #bd1c2b;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #a31824;
+      }
+      #status {
+        margin-top: 16px;
+        font-weight: 500;
+      }
+      code {
+        background: #f2f2f2;
+        padding: 2px 6px;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>重置局域网共享模式</h1>
+      <p>
+        如果侧边栏一直空白、加载不出来，通常是因为之前开启过「局域网房间」，
+        扩展记住了局域网服务器地址（<code>h-local.server</code>），但本地助手
+        程序已经停止，导致客户端启动时连不上服务器。
+      </p>
+      <p>点击下方按钮清除保存的局域网服务器地址，恢复本地模式：</p>
+      <button id="reset" type="button">清除局域网设置并恢复本地模式</button>
+      <p id="status"></p>
+      <p>完成后请关闭本页，重新点击工具栏上的扩展图标。</p>
+    </div>
+    <script>
+      document.getElementById('reset').addEventListener('click', () => {
+        try {
+          localStorage.removeItem('h-local.server');
+          document.getElementById('status').textContent =
+            '✅ 已清除。现在可以重新打开侧边栏了。';
+        } catch (err) {
+          document.getElementById('status').textContent =
+            '清除失败：' + err.message;
+        }
+      });
+    </script>
+  </body>
+</html>

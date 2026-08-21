@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <title>H Local e2e test page</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: sans-serif;
+      }
+      .wrap {
+        margin: 40px;
+        padding: 20px;
+        background: #f4f4f4;
+        display: inline-block;
+      }
+      img {
+        display: block;
+      }
+      .caption {
+        margin-top: 8px;
+        color: #555;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>网页图片批注测试页</h1>
+    <a id="target-link" href="https://example.com/navigate-away">
+      <p id="target-paragraph" style="max-width: 400px;">
+        这是一段用于 pin 批注测试的段落文字。点击工具栏的大头针按钮，然后直接
+        单击这段文字，就可以把批注钉在这段内容上。
+      </p>
+    </a>
+    <p>使用工具栏的框选 / 打点工具，在下面这张图片上做批注。</p>
+    <div class="wrap" id="img-wrap">
+      <img
+        id="target-image"
+        width="400"
+        height="300"
+        alt="test image"
+        src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%22300%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%2340a0d0%22%2F%3E%3Ccircle%20cx%3D%22200%22%20cy%3D%22150%22%20r%3D%2260%22%20fill%3D%22%23f0c040%22%2F%3E%3C%2Fsvg%3E"
+      />
+      <div class="caption">一只黄色圆点的示意图</div>
+    </div>
+
+    <script class="js-hypothesis-config" type="application/json">
+      {
+        "openSidebar": true,
+        "appType": "e2e",
+        "sidebarAppUrl": "http://127.0.0.1:9000/SIDEBAR_APP",
+        "notebookAppUrl": "http://127.0.0.1:9000/SIDEBAR_APP",
+        "profileAppUrl": "http://127.0.0.1:9000/SIDEBAR_APP",
+        "assetRoot": "http://127.0.0.1:9000/client/"
+      }
+    </script>
+    <script>
+      // Allow tests to select a different sidebar app (eg. LAN mode) without
+      // changing the page URI.
+      (function () {
+        const override = localStorage.getItem('h-local.sidebarApp');
+        if (override) {
+          document.querySelector('script.js-hypothesis-config').textContent =
+            document
+              .querySelector('script.js-hypothesis-config')
+              .textContent.replaceAll(
+                'http://127.0.0.1:9000/SIDEBAR_APP',
+                override,
+              );
+        }
+      })();
+    </script>
+    <script src="http://127.0.0.1:9000/client/build/boot.js"></script>
+  </body>
+</html>
