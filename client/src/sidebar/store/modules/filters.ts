@@ -16,7 +16,7 @@ export type FilterOption = {
  * Supported filters. This should be a subset of the filters supported by the
  * `filterAnnotations` function that filters annotations in the sidebar.
  */
-export type FilterKey = 'cfi' | 'page' | 'user';
+export type FilterKey = 'cfi' | 'page' | 'uri' | 'user';
 
 export type Filters = Partial<Record<FilterKey, FilterOption | undefined>>;
 

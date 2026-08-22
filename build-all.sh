@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 一键构建 Hypothesis 增强版：先构建 client，再构建并打包浏览器扩展。
+# 一键构建 Hypothesis 增强版：构建 client，再构建浏览器扩展。
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -16,11 +16,10 @@ echo "==> 安装扩展依赖"
 echo "==> 构建扩展 (settings/chrome-local.json)"
 (cd browser-extension && make build SETTINGS_FILE=settings/chrome-local.json)
 
-echo "==> 打包"
-(cd browser-extension && make dist/hypothesis-enhanced.zip SETTINGS_FILE=settings/chrome-local.json)
-
 echo ""
-echo "完成！产物: browser-extension/dist/hypothesis-enhanced.zip"
+echo "完成！直接加载 browser-extension/build/ 目录即可。"
+echo "无需打包或解压；如需发布用 zip，可运行："
+echo "  (cd browser-extension && make dist/hypothesis-enhanced.zip SETTINGS_FILE=settings/chrome-local.json)"
 echo "Edge 里打开 edge://extensions，开启'开发人员模式'，"
 echo "点'加载解压缩的扩展'，选择 browser-extension/build/ 目录。"
 echo "不需要启动任何本地服务，不需要登录。"

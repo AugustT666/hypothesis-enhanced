@@ -67,3 +67,28 @@ export function useUserFilterOptions(): FilterOption[] {
     focusFilters.user,
   ]);
 }
+
+/**
+ * Generate a list of documents (URIs) for filtering notebook annotations.
+ */
+export function useDocumentFilterOptions(): FilterOption[] {
+  const store = useSidebarStore();
+  const annotations = store.allAnnotations();
+
+  return useMemo(() => {
+    const documents = new Map<string, string>();
+    for (const annotation of annotations) {
+      if (!annotation.uri || documents.has(annotation.uri)) {
+        continue;
+      }
+      const title = annotation.document?.title;
+      documents.set(
+        annotation.uri,
+        typeof title === 'string' && title ? title : annotation.uri,
+      );
+    }
+    return [...documents.entries()]
+      .map(([uri, title]) => ({ value: uri, display: title }))
+      .sort((a, b) => a.display.localeCompare(b.display));
+  }, [annotations]);
+}

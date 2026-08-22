@@ -7,6 +7,7 @@ import { $imports } from '../NotebookFilters';
 
 describe('NotebookFilters', () => {
   let fakeStore;
+  let fakeUseDocumentFilterOptions;
   let fakeUseUserFilterOptions;
 
   const createComponent = () => {
@@ -14,6 +15,7 @@ describe('NotebookFilters', () => {
   };
 
   beforeEach(() => {
+    fakeUseDocumentFilterOptions = sinon.stub().returns([]);
     fakeUseUserFilterOptions = sinon.stub().returns([]);
 
     fakeStore = {
@@ -24,6 +26,7 @@ describe('NotebookFilters', () => {
     $imports.$mock(mockImportedComponents());
     $imports.$mock({
       './hooks/use-filter-options': {
+        useDocumentFilterOptions: fakeUseDocumentFilterOptions,
         useUserFilterOptions: fakeUseUserFilterOptions,
       },
       '../store': { useSidebarStore: () => fakeStore },
@@ -41,7 +44,17 @@ describe('NotebookFilters', () => {
 
     const wrapper = createComponent();
 
-    const props = wrapper.find('FilterSelect').props();
+    const selects = wrapper.find('FilterSelect');
+    assert.equal(selects.length, 2);
+
+    const documentProps = selects.at(0).props();
+    assert.deepEqual(documentProps.defaultOption, {
+      value: '',
+      display: '全部文档',
+    });
+    assert.equal(documentProps.title, '按文档筛选');
+
+    const props = selects.at(1).props();
     assert.deepEqual(props.options[0], {
       display: 'One User',
       value: 'oneuser',
@@ -63,10 +76,13 @@ describe('NotebookFilters', () => {
 
     const wrapper = createComponent();
 
-    assert.deepEqual(wrapper.find('FilterSelect').props().selectedOption, {
-      display: 'One User',
-      value: 'oneuser',
-    });
+    assert.deepEqual(
+      wrapper.find('FilterSelect').at(1).props().selectedOption,
+      {
+        display: 'One User',
+        value: 'oneuser',
+      },
+    );
   });
 
   it('should set a user filter when a user is selected', () => {
@@ -78,6 +94,7 @@ describe('NotebookFilters', () => {
 
     wrapper
       .find('FilterSelect')
+      .at(1)
       .props()
       .onSelect({ display: 'One User', value: 'oneuser' });
 

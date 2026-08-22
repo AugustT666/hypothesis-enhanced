@@ -98,6 +98,16 @@ export function isLoopbackLanServerURL(serverURL: string): boolean {
   }
 }
 
+/** Return the command users can run to install the native messaging host. */
+export function getNativeHostInstallCommand(): string | null {
+  const chromeAPI = (window as unknown as { chrome?: any }).chrome;
+  const extensionId = chromeAPI?.runtime?.id;
+  if (!extensionId) {
+    return null;
+  }
+  return `./local-h/install-native-host.sh ${extensionId}`;
+}
+
 function describeNativeHostError(error: string | undefined): string {
   const message = error ?? '';
   if (message.includes('not found')) {
@@ -366,10 +376,22 @@ export default function LanServerControls({
   startLabel = '启动房间',
 }: LanServerControlsProps) {
   const [value, setValue] = useState(savedServerURL);
+  const [installCommandCopied, setInstallCommandCopied] = useState(false);
 
   useEffect(() => {
     setValue(savedServerURL);
   }, [savedServerURL]);
+
+  const copyInstallCommand = useCallback(() => {
+    const command = getNativeHostInstallCommand();
+    if (!command) {
+      return;
+    }
+    navigator.clipboard?.writeText(command).then(
+      () => setInstallCommandCopied(true),
+      () => setInstallCommandCopied(false),
+    );
+  }, []);
 
   const copyLink = useCallback(
     (url: string) => {
@@ -454,9 +476,25 @@ export default function LanServerControls({
           </button>
         )}
         {host.kind === 'error' && (
-          <p className="text-sm text-red-600" data-testid="lan-server-error">
-            {host.message}
-          </p>
+          <div className="space-y-2">
+            <p className="text-sm text-red-600" data-testid="lan-server-error">
+              {host.message}
+            </p>
+            {getNativeHostInstallCommand() && (
+              <div className="flex items-center gap-2 text-sm">
+                <code className="break-all rounded bg-grey-1 px-2 py-1">
+                  {getNativeHostInstallCommand()}
+                </code>
+                <button
+                  className="px-2 py-1 rounded border hover:bg-grey-1"
+                  data-testid="lan-server-copy-install-command"
+                  onClick={copyInstallCommand}
+                >
+                  {installCommandCopied ? '已复制' : '复制安装命令'}
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </section>
 
