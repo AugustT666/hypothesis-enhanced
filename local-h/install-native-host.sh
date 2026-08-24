@@ -57,7 +57,7 @@ write_manifest() {
   ]
 }
 EOF
-  echo "已注册 $browser_name：$manifest_dir/com.hlocal.server.json"
+  echo "已注册 ${browser_name}：$manifest_dir/com.hlocal.server.json"
 }
 
 write_manifest "Edge" \

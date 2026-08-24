@@ -122,20 +122,51 @@ function respond(payload, onWritten = () => {}) {
   process.stdout.write(Buffer.concat([header, body]), onWritten);
 }
 
+
+/** Return true if `port` is already serving a local-h annotation API. */
+async function isLocalServerRunning(port) {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 800);
+    const response = await fetch(`http://127.0.0.1:${port}/api`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!response.ok) {
+      return false;
+    }
+    const data = await response.json();
+    return typeof data.total === 'number' && data.links;
+  } catch {
+    return false;
+  }
+}
+
 async function handleStart(request) {
   const port = Number(request.port) || 8123;
 
   const state = readState();
   if (isRunning(state)) {
     return {
-    status: 'running',
-    port: state.port,
-    urls: lanURLs(state.port),
-    ...serverHostInfo(),
-  };
+      status: 'running',
+      port: state.port,
+      urls: lanURLs(state.port),
+      ...serverHostInfo(),
+    };
   }
   if (state) {
     rmSync(STATE_FILE, { force: true });
+  }
+
+  // An older server process may already be serving this port (eg. after a
+  // browser or host restart). Reuse it instead of failing with "port in use".
+  if (await isLocalServerRunning(port)) {
+    return {
+      status: 'running',
+      port,
+      urls: lanURLs(port),
+      ...serverHostInfo(),
+    };
   }
 
   if (!existsSync(SERVER_SCRIPT)) {
