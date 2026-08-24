@@ -7,11 +7,24 @@ export const LAN_SERVER_STORAGE_KEY = 'h-local.server';
 export type HostStatus =
   | { kind: 'checking' }
   | { kind: 'stopped' }
-  | { kind: 'running'; urls: string[]; port: number }
+  | {
+      kind: 'running';
+      urls: string[];
+      port: number;
+      hostname?: string;
+      platform?: string;
+    }
   | { kind: 'error'; message: string };
 
 export type HostReply =
-  | { ok: true; status: 'running' | 'started'; port: number; urls: string[] }
+  | {
+      ok: true;
+      status: 'running' | 'started';
+      port: number;
+      urls: string[];
+      hostname?: string;
+      platform?: string;
+    }
   | { ok: true; status: 'stopped' }
   | { ok: false; message: string };
 
@@ -130,6 +143,10 @@ function parseHostResponse(response: unknown): HostReply {
   const urls = Array.isArray(result.urls)
     ? result.urls.filter((url): url is string => typeof url === 'string')
     : [];
+  const hostname =
+    typeof result.hostname === 'string' ? result.hostname : undefined;
+  const platform =
+    typeof result.platform === 'string' ? result.platform : undefined;
 
   if (status === 'started' || status === 'running') {
     return {
@@ -137,6 +154,8 @@ function parseHostResponse(response: unknown): HostReply {
       status,
       port,
       urls,
+      hostname,
+      platform,
     };
   }
   if (status === 'stopped') {
@@ -259,6 +278,8 @@ export function useLanServerHost(
         kind: 'running',
         urls: reply.urls,
         port: reply.port,
+        hostname: reply.hostname,
+        platform: reply.platform,
       });
     } else if (reply.ok) {
       updateHost(requestId, { kind: 'stopped' });
@@ -293,6 +314,8 @@ export function useLanServerHost(
         kind: 'running',
         urls: reply.urls,
         port: reply.port,
+        hostname: reply.hostname,
+        platform: reply.platform,
       });
     } else if (reply.ok) {
       updateHost(requestId, { kind: 'stopped' });

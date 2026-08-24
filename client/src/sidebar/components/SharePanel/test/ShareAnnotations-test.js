@@ -32,6 +32,11 @@ describe('ShareAnnotations', () => {
   }
   MockLanServerControls.displayName = 'LanServerControls';
 
+  function MockAgentDelivery() {
+    return <div data-testid="mock-agent-delivery" />;
+  }
+  MockAgentDelivery.displayName = 'AgentDelivery';
+
   const createComponent = props =>
     mount(<ShareAnnotations toastMessenger={fakeToastMessenger} {...props} />);
 
@@ -77,6 +82,9 @@ describe('ShareAnnotations', () => {
         pageSharingLink: fakePageSharingLink,
       },
       '../../util/copy-to-clipboard': fakeCopyToClipboard,
+      '../AgentDelivery': {
+        default: MockAgentDelivery,
+      },
       '../LanServerControls': {
         default: MockLanServerControls,
         getLanServerURL: fakeGetLanServerURL,

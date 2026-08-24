@@ -12,6 +12,7 @@ import { withServices } from '../../service-context';
 import type { ToastMessengerService } from '../../services/toast-messenger';
 import { useSidebarStore } from '../../store';
 import { copyPlainText } from '../../util/copy-to-clipboard';
+import AgentDelivery from '../AgentDelivery';
 import LanServerControls, {
   getLanServerURL,
   isLoopbackLanServerURL,
@@ -168,6 +169,7 @@ function ShareAnnotations({ toastMessenger }: ShareAnnotationsProps) {
           onCopy={onCopyLink}
           startLabel="创建局域网房间"
         />
+        <AgentDelivery host={host} onStart={startHost} />
       </div>
     </div>
   );

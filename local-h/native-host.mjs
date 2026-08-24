@@ -22,7 +22,12 @@
 
 import { spawn } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { networkInterfaces } from 'node:os';
+import {
+  arch,
+  hostname,
+  networkInterfaces,
+  platform,
+} from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -100,6 +105,14 @@ function isRunning(state) {
   } catch {
     return false;
   }
+
+}
+
+function serverHostInfo() {
+  return {
+    hostname: hostname(),
+    platform: `${platform()} ${arch()}`,
+  };
 }
 
 function respond(payload, onWritten = () => {}) {
@@ -114,7 +127,12 @@ async function handleStart(request) {
 
   const state = readState();
   if (isRunning(state)) {
-    return { status: 'running', port: state.port, urls: lanURLs(state.port) };
+    return {
+    status: 'running',
+    port: state.port,
+    urls: lanURLs(state.port),
+    ...serverHostInfo(),
+  };
   }
   if (state) {
     rmSync(STATE_FILE, { force: true });
@@ -173,7 +191,12 @@ async function handleStart(request) {
     'utf8',
   );
 
-  return { status: 'started', port, urls: lanURLs(port) };
+  return {
+    status: 'started',
+    port,
+    urls: lanURLs(port),
+    ...serverHostInfo(),
+  };
 }
 
 async function handleStop() {
@@ -199,7 +222,12 @@ async function handleStop() {
 function handleStatus() {
   const state = readState();
   if (isRunning(state)) {
-    return { status: 'running', port: state.port, urls: lanURLs(state.port) };
+    return {
+    status: 'running',
+    port: state.port,
+    urls: lanURLs(state.port),
+    ...serverHostInfo(),
+  };
   }
   return { status: 'stopped' };
 }
