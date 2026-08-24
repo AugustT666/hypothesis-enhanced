@@ -18,7 +18,7 @@
 在 Edge/Chrome 的扩展管理页开启“开发人员模式”，选择“加载解压缩的扩展”，目录选择：
 
 ```text
-browser-extension/build
+dist/hypothesis-enhanced
 ```
 
 修改源码后需要重新构建时，再运行：

@@ -1,8 +1,8 @@
 {
   "name": "Hypothesis 增强版 - 本地网页与图片批注",
   "short_name": "Hypothesis+",
-  "version": "1.1766.0.7",
-  "version_name": "1.1766.0.7 (g44a5545.dirty)",
+  "version": "1.1766.0.8",
+  "version_name": "1.1766.0.8 (gfecb4e3.dirty)",
   "manifest_version": 3,
 
   "minimum_chrome_version": "88",
