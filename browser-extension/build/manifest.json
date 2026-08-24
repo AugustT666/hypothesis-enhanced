@@ -1,0 +1,66 @@
+{
+  "name": "Hypothesis 增强版 - 本地网页与图片批注",
+  "short_name": "Hypothesis+",
+  "version": "1.1766.0.7",
+  "version_name": "1.1766.0.7 (g44a5545.dirty)",
+  "manifest_version": 3,
+
+  "minimum_chrome_version": "88",
+
+
+
+  "description": "在保留官方网页与 PDF 批注功能的基础上，增加免登录本地模式、网页图片框选/打点批注与局域网协作。基于 Hypothesis 官方仓库二次开发。",
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
+
+  "incognito": "split",
+
+  "options_ui": {
+    "page": "options/index.html"
+  },
+
+  "offline_enabled": true,
+
+  "permissions": [
+    "scripting",
+    "storage",
+    "tabs",
+    "nativeMessaging"
+  ],
+
+  "host_permissions": ["<all_urls>"],
+
+  "optional_permissions": [
+    "webNavigation"
+  ],
+
+  "background": {
+    "service_worker": "extension.bundle.js"
+  },
+
+  "action": {
+    "default_icon": {
+      "19": "images/browser-icon-inactive.png",
+      "38": "images/browser-icon-inactive@2x.png"
+    }
+  },
+
+  "externally_connectable": {
+    "matches": ["https://hyp.is/*"]
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "client/*",
+        "help/*",
+        "pdfjs/*",
+        "pdfjs/web/viewer.html"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

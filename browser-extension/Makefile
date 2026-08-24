@@ -40,6 +40,7 @@ clean:
 # `SETTINGS_FILE` changed, but the output file is only updated if needed.
 .PHONY: force build/settings.json
 build/settings.json: force
+	@mkdir -p build
 	tools/settings.js $(SETTINGS_FILE) > $@.tmp
 	rsync --checksum $@.tmp $@
 	rm $@.tmp
@@ -63,14 +64,19 @@ build/extension.bundle.js: src/background/*.ts rollup.config.js build/settings.j
 build/manifest.json: src/manifest.json.mustache build/settings.json
 	$(MUSTACHE) build/settings.json $< > $@
 build/client/build: node_modules/hypothesis/build/manifest.json
-	@mkdir -p $@
-	cp -R node_modules/hypothesis/build/* $@
+	@mkdir -p $@/scripts $@/styles
+	cp node_modules/hypothesis/build/boot-template.js $@/boot-template.js
+	cp node_modules/hypothesis/build/scripts/annotator.bundle.js $@/scripts/
+	cp node_modules/hypothesis/build/scripts/sidebar.bundle.js $@/scripts/
+	cp node_modules/hypothesis/build/styles/annotator.css $@/styles/
+	cp node_modules/hypothesis/build/styles/highlights.css $@/styles/
+	cp node_modules/hypothesis/build/styles/katex.min.css $@/styles/
+	cp node_modules/hypothesis/build/styles/pdfjs-overrides.css $@/styles/
+	cp node_modules/hypothesis/build/styles/sidebar.css $@/styles/
+	cp -R node_modules/hypothesis/build/styles/fonts $@/styles/
 	@# Replace boot template with extension-specific URLs.
 	node tools/render-boot-template.js $@/boot-template.js $@/boot.js
 	rm $@/boot-template.js
-	@# We can't leave the client manifest in the build or the Chrome Web Store
-	@# will complain.
-	rm $@/manifest.json
 build/client/app.html: src/sidebar-app.html.mustache build/client build/settings.json
 	tools/template-context-app.js build/settings.json | $(MUSTACHE) - $< >$@
 build/client/notebook.html: build/client/app.html
