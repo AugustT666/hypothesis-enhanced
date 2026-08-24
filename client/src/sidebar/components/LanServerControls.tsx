@@ -400,6 +400,63 @@ export default function LanServerControls({
 }: LanServerControlsProps) {
   const [value, setValue] = useState(savedServerURL);
   const [installCommandCopied, setInstallCommandCopied] = useState(false);
+  const [installerState, setInstallerState] = useState<
+    'idle' | 'working' | 'done' | 'error'
+  >('idle');
+
+  const installNativeHost = useCallback(async () => {
+    setInstallerState('working');
+    try {
+      const chromeAPI = (window as unknown as { chrome?: any }).chrome;
+      if (!chromeAPI?.runtime?.getURL || !chromeAPI?.downloads?.download) {
+        setInstallerState('error');
+        return;
+      }
+
+      const platform = await new Promise<string>(resolve => {
+        chromeAPI.runtime.getPlatformInfo((info: { os?: string }) =>
+          resolve(info.os ?? ''),
+        );
+      });
+      if (platform !== 'win') {
+        setInstallerState('error');
+        return;
+      }
+
+      const templateUrl = chromeAPI.runtime.getURL(
+        '/native-host/install-native-host.bat',
+      );
+      const template = await fetch(templateUrl).then(response =>
+        response.text(),
+      );
+      const extensionId = chromeAPI.runtime.id;
+      const installer = template.replace('__EXTENSION_ID__', extensionId);
+      const blobURL = URL.createObjectURL(
+        new Blob([installer], { type: 'application/octet-stream' }),
+      );
+      const downloadId = await new Promise<number>((resolve, reject) => {
+        chromeAPI.downloads.download(
+          {
+            url: blobURL,
+            filename: 'install-h-local.bat',
+            saveAs: false,
+          },
+          (id: number) => {
+            const error = chromeAPI.runtime.lastError;
+            if (error) {
+              reject(new Error(error.message));
+            } else {
+              resolve(id);
+            }
+          },
+        );
+      });
+      chromeAPI.downloads.open?.(downloadId);
+      setInstallerState('done');
+    } catch {
+      setInstallerState('error');
+    }
+  }, []);
 
   useEffect(() => {
     setValue(savedServerURL);
@@ -503,6 +560,27 @@ export default function LanServerControls({
             <p className="text-sm text-red-600" data-testid="lan-server-error">
               {host.message}
             </p>
+            <button
+              className="px-3 py-1.5 rounded bg-brand text-white disabled:opacity-50"
+              data-testid="lan-server-install"
+              disabled={installerState === 'working'}
+              onClick={installNativeHost}
+            >
+              {installerState === 'working'
+                ? '正在生成安装器…'
+                : '下载一键安装脚本'}
+            </button>
+            {installerState === 'done' && (
+              <p className="text-sm text-green-700">
+                已下载 install-h-local.bat。请在浏览器下载栏打开它；若出现
+                SmartScreen 提示，选择“仍要运行”。
+              </p>
+            )}
+            {installerState === 'error' && (
+              <p className="text-sm text-red-600">
+                当前系统暂不支持自动生成安装器，请使用下方命令。
+              </p>
+            )}
             {getNativeHostInstallCommand() && (
               <div className="flex items-center gap-2 text-sm">
                 <code className="break-all rounded bg-grey-1 px-2 py-1">

@@ -28,6 +28,7 @@
     "scripting",
     "storage",
     "tabs",
+    "downloads",
     "nativeMessaging"
   ],
 
@@ -57,6 +58,7 @@
       "resources": [
         "client/*",
         "help/*",
+        "native-host/*",
         "pdfjs/*",
         "pdfjs/web/viewer.html"
       ],

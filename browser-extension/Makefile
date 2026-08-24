@@ -46,7 +46,7 @@ build/settings.json: force
 	rm $@.tmp
 	@touch $@
 
-EXTENSION_SRC := pdfjs help images options
+EXTENSION_SRC := native-host pdfjs help images options
 
 .PHONY: extension
 extension: build/extension.bundle.js
