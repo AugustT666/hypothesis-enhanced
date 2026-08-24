@@ -24,6 +24,9 @@ rm -rf dist/hypothesis-enhanced
 mkdir -p dist
 cp -R browser-extension/build dist/hypothesis-enhanced
 
+# `browser-extension/build` 只是 Makefile 的临时构建目录，不保留。
+rm -rf browser-extension/build
+
 echo ""
 echo "完成！直接加载 dist/hypothesis-enhanced/ 目录即可。"
 echo "无需打包或解压；如需发布用 zip，可运行："
