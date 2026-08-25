@@ -55542,6 +55542,12 @@ function combineGroups(userGroups, featuredGroups, uri, settings) {
   if (worldGroup) {
     userGroups.unshift(worldGroup);
   }
+
+  // De-duplicate the "My groups" list by group id. Focused groups (e.g. set
+  // via a via.hypothes.is link such as `#annotations:group:__world__`) can
+  // introduce a second copy of a group the user already has, producing
+  // duplicate entries (e.g. two "Public" rows) in the groups selector.
+  userGroups = userGroups.filter((group, index) => userGroups.findIndex(g => g.id === group.id) === index);
   const myGroupIds = userGroups.map(g => g.id);
   featuredGroups = featuredGroups.filter(g => !myGroupIds.includes(g.id));
 

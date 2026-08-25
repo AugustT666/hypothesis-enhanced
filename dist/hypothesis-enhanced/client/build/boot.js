@@ -4,22 +4,22 @@
   var manifest = {
   	"styles/annotator.css": "styles/annotator.css?2911a6",
   	"styles/annotator.css.map": "styles/annotator.css.map?0fa42e",
-  	"styles/pdfjs-overrides.css.map": "styles/pdfjs-overrides.css.map?5a12c5",
-  	"styles/katex.min.css": "styles/katex.min.css?027dee",
   	"styles/highlights.css": "styles/highlights.css?f741a8",
   	"styles/highlights.css.map": "styles/highlights.css.map?e0dd35",
+  	"styles/katex.min.css": "styles/katex.min.css?027dee",
   	"styles/katex.min.css.map": "styles/katex.min.css.map?f4f041",
   	"styles/pdfjs-overrides.css": "styles/pdfjs-overrides.css?d58df4",
+  	"styles/pdfjs-overrides.css.map": "styles/pdfjs-overrides.css.map?5a12c5",
   	"styles/sidebar.css": "styles/sidebar.css?bab314",
-  	"styles/ui-playground.css.map": "styles/ui-playground.css.map?6a44d8",
-  	"styles/sidebar.css.map": "styles/sidebar.css.map?21375b",
   	"styles/ui-playground.css": "styles/ui-playground.css?b42c18",
+  	"styles/sidebar.css.map": "styles/sidebar.css.map?21375b",
+  	"styles/ui-playground.css.map": "styles/ui-playground.css.map?6a44d8",
   	"scripts/annotator.bundle.js": "scripts/annotator.bundle.js?9e633e",
   	"scripts/ui-playground.bundle.js": "scripts/ui-playground.bundle.js?0094f7",
   	"scripts/annotator.bundle.js.map": "scripts/annotator.bundle.js.map?a4c4ff",
   	"scripts/ui-playground.bundle.js.map": "scripts/ui-playground.bundle.js.map?e3d9d5",
-  	"scripts/sidebar.bundle.js": "scripts/sidebar.bundle.js?3ddd75",
-  	"scripts/sidebar.bundle.js.map": "scripts/sidebar.bundle.js.map?1cd84d"
+  	"scripts/sidebar.bundle.js": "scripts/sidebar.bundle.js?80bd1a",
+  	"scripts/sidebar.bundle.js.map": "scripts/sidebar.bundle.js.map?11be6f"
   };
 
   /**
