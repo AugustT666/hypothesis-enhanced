@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <hypothesis-app></hypothesis-app>
+
+    <script class="js-hypothesis-config" type="application/json">
+      {
+        "apiUrl": "local://api/",
+        "authDomain": "localhost",
+        "serviceUrl": "local://",
+        "appType": "e2e",
+        "noAuth": true,
+        "localApi": true,
+        "assetRoot": "http://127.0.0.1:9000/client/"
+      }
+    </script>
+
+    <script src="http://127.0.0.1:9000/client/build/boot.js"></script>
+
+    <script>
+      // Test harness: provide a fake `chrome.tabs` API so the screenshot
+      // pipeline (captureVisibleTab -> crop -> store) can be exercised
+      // without the real browser extension.
+      window.chrome = {
+        tabs: {
+          getCurrent: cb => cb({ windowId: 1 }),
+          captureVisibleTab: (windowId, options, cb) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 400;
+            canvas.height = 300;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#4477cc';
+            ctx.fillRect(0, 0, 400, 300);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '24px sans-serif';
+            ctx.fillText('captured tab', 130, 150);
+            cb(canvas.toDataURL('image/png'));
+          },
+        },
+      };
+    </script>
+  </body>
+</html>

@@ -1,0 +1,74 @@
+#!/usr/bin/env node
+/**
+ * Creates a GitHub release for the repository.
+ *
+ * This should be run just after a released is tagged with the tag name
+ * `v<VERSION>` where <VERSION> is the `version` field in package.json.
+ */
+import { Octokit } from '@octokit/rest';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { changelistSinceTag } from './generate-change-list.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(fs.readFileSync(`${__dirname}/../package.json`));
+
+async function createGitHubRelease({ previousVersion }) {
+  // See https://github.com/docker/docker/issues/679
+  const GITHUB_ORG_REPO_PAT =
+    /github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)\.git$/;
+  const repoUrl = pkg.repository?.url;
+  const match = repoUrl?.match(GITHUB_ORG_REPO_PAT);
+
+  if (!match || !match[1]) {
+    throw new Error(
+      'package.json is missing a "repository"."url" field of the form git+https://github.com/:owner/:repo',
+    );
+  }
+
+  if (!process.env.GITHUB_TOKEN) {
+    throw new Error('GITHUB_TOKEN env var is not set');
+  }
+
+  const octokit = new Octokit({
+    auth: process.env.GITHUB_TOKEN,
+  });
+
+  const changes = await changelistSinceTag(octokit, previousVersion);
+  const [owner, repo] = match[1].split('/');
+  const releaseName = `v${pkg.version}`;
+
+  console.log(
+    `Creating release ${releaseName} of ${owner}/${repo}.
+Changes since previous release ${previousVersion}:
+
+${changes}
+`,
+  );
+
+  await octokit.repos.createRelease({
+    // Required params.
+    owner,
+    repo,
+    tag_name: releaseName,
+
+    // Optional params.
+    body: changes,
+    draft: false,
+    name: releaseName,
+    prerelease: true,
+  });
+}
+
+const previousVersion = process.argv[2];
+if (!previousVersion) {
+  console.error(`Usage: ${process.argv[1]} <previous version>`);
+  process.exit(1);
+}
+
+createGitHubRelease({ previousVersion }).catch(err => {
+  console.error('Failed to create release.', err);
+  process.exit(1);
+});
