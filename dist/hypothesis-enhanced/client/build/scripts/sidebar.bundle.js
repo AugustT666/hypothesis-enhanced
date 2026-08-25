@@ -51077,6 +51077,76 @@ function AgentDelivery({
   }, this);
 }
 
+/**
+ * Helpers for validating user-provided LAN annotation-server addresses.
+ *
+ * The "join a colleague's LAN room" input accepts a LAN server address such
+ * as `http://192.168.1.10:8123`. Anything else — in particular public
+ * websites like the official Hypothesis share links (`https://hyp.is/...`) —
+ * must be rejected: the sidebar would otherwise route its annotation API at
+ * a website that returns HTML instead of JSON and become unusable.
+ */
+
+/** Hostnames that always point at the local machine. */
+function isLoopbackHostname(hostname) {
+  return hostname === 'localhost' || hostname.endsWith('.localhost') || hostname === '::1';
+}
+
+/**
+ * Return true if `hostname` is an IPv4 literal in a private LAN range
+ * (RFC 1918), a loopback address, or an mDNS `*.local` name.
+ */
+function isPrivateLanHostname(hostname) {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (isLoopbackHostname(host)) {
+    return true;
+  }
+  const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
+  if (ipv4) {
+    const a = Number(ipv4[1]);
+    const b = Number(ipv4[2]);
+    if (a === 10 || a === 127) {
+      return true;
+    }
+    if (a === 192 && b === 168) {
+      return true;
+    }
+    if (a === 172 && b >= 16 && b <= 31) {
+      return true;
+    }
+    return false;
+  }
+
+  // mDNS hostnames used for direct LAN connections (e.g. `host.local`).
+  if (host.endsWith('.local')) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Return true if `url` looks like a LAN annotation-server address that is
+ * safe to connect to: an http(s) URL whose host is a private LAN address.
+ *
+ * Inputs like "192.168.1.10:8123" (no scheme) are accepted.
+ */
+function isPlausibleLanServerURL(url) {
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return false;
+  }
+  let parsed;
+  try {
+    parsed = new URL(/^https?:\/\//i.test(trimmed) ? trimmed : `http://${trimmed}`);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    return false;
+  }
+  return isPrivateLanHostname(parsed.hostname);
+}
+
 var _jsxFileName$u = "C:\\Users\\August\\Downloads\\hypothesis-enhanced-main\\client\\src\\sidebar\\components\\LanServerControls.tsx";
 const LAN_SERVER_HOST_NAME = 'com.hlocal.server';
 const LAN_SERVER_DEFAULT_PORT = 8123;
@@ -51422,8 +51492,20 @@ function LanServerControls({
   startLabel = '启动房间'
 }) {
   const [value, setValue] = d$3(savedServerURL);
+  const [joinError, setJoinError] = d$3(null);
   const [installCommandCopied, setInstallCommandCopied] = d$3(false);
   const [installerState, setInstallerState] = d$3('idle');
+
+  /** Validate and save the address typed into the "join room" input. */
+  const saveAddress = q$3(() => {
+    const trimmed = value.trim();
+    if (trimmed && !isPlausibleLanServerURL(trimmed)) {
+      setJoinError('这不是局域网房间地址。请粘贴同事分享的局域网链接（形如 http://192.168.x.x:8123），不要粘贴 hyp.is 等公网分享链接。');
+      return;
+    }
+    setJoinError(null);
+    onSave(normalizeLanServerURL(trimmed));
+  }, [onSave, value]);
   const installNativeHost = q$3(async () => {
     setInstallerState('working');
     try {
@@ -51495,12 +51577,12 @@ function LanServerControls({
         children: savedServerURL
       }, void 0, false, {
         fileName: _jsxFileName$u,
-        lineNumber: 504,
+        lineNumber: 520,
         columnNumber: 11
       }, this)]
     }, void 0, true, {
       fileName: _jsxFileName$u,
-      lineNumber: 502,
+      lineNumber: 518,
       columnNumber: 9
     }, this), u$3("section", {
       className: "space-y-2",
@@ -51509,14 +51591,14 @@ function LanServerControls({
         children: "\u5728\u672C\u673A\u542F\u52A8\u623F\u95F4"
       }, void 0, false, {
         fileName: _jsxFileName$u,
-        lineNumber: 511,
+        lineNumber: 527,
         columnNumber: 9
       }, this), u$3("p", {
         className: "text-sm text-grey-6",
         children: "\u70B9\u4E00\u4E0B\u6309\u94AE\uFF0C\u672C\u673A\u5C31\u6210\u4E3A\u623F\u95F4\u4E3B\u673A\uFF1B\u628A\u94FE\u63A5\u53D1\u7ED9\u540C\u4E8B\u5373\u53EF\u52A0\u5165\uFF0C \u65E0\u9700\u5BC6\u7801\uFF08\u6BCF\u4EBA\u663E\u793A\u4E3A\u5404\u81EA IPv4 \u5730\u5740\uFF09\u3002"
       }, void 0, false, {
         fileName: _jsxFileName$u,
-        lineNumber: 512,
+        lineNumber: 528,
         columnNumber: 9
       }, this), host.kind === 'running' && u$3("div", {
         className: "space-y-1",
@@ -51525,7 +51607,7 @@ function LanServerControls({
           children: ["\u623F\u95F4\u8FD0\u884C\u4E2D\uFF08\u7AEF\u53E3 ", host.port, "\uFF09"]
         }, void 0, true, {
           fileName: _jsxFileName$u,
-          lineNumber: 518,
+          lineNumber: 534,
           columnNumber: 13
         }, this), host.urls.length === 0 && u$3("div", {
           className: "text-sm text-grey-7",
@@ -51534,12 +51616,12 @@ function LanServerControls({
             children: ["http://127.0.0.1:", host.port]
           }, void 0, true, {
             fileName: _jsxFileName$u,
-            lineNumber: 523,
+            lineNumber: 539,
             columnNumber: 17
           }, this)
         }, void 0, false, {
           fileName: _jsxFileName$u,
-          lineNumber: 522,
+          lineNumber: 538,
           columnNumber: 15
         }, this), host.urls.map(url => u$3("div", {
           className: "flex items-center gap-2 text-sm text-grey-7",
@@ -51549,7 +51631,7 @@ function LanServerControls({
             children: url
           }, void 0, false, {
             fileName: _jsxFileName$u,
-            lineNumber: 533,
+            lineNumber: 549,
             columnNumber: 17
           }, this), u$3("button", {
             className: "px-2 py-0.5 rounded border hover:bg-grey-1",
@@ -51557,12 +51639,12 @@ function LanServerControls({
             children: "\u590D\u5236\u94FE\u63A5"
           }, void 0, false, {
             fileName: _jsxFileName$u,
-            lineNumber: 536,
+            lineNumber: 552,
             columnNumber: 17
           }, this)]
         }, url, true, {
           fileName: _jsxFileName$u,
-          lineNumber: 529,
+          lineNumber: 545,
           columnNumber: 15
         }, this)), u$3("button", {
           className: "px-3 py-1.5 rounded border text-red-600 hover:bg-red-50",
@@ -51571,12 +51653,12 @@ function LanServerControls({
           children: "\u505C\u6B62\u623F\u95F4"
         }, void 0, false, {
           fileName: _jsxFileName$u,
-          lineNumber: 544,
+          lineNumber: 560,
           columnNumber: 13
         }, this)]
       }, void 0, true, {
         fileName: _jsxFileName$u,
-        lineNumber: 517,
+        lineNumber: 533,
         columnNumber: 11
       }, this), host.kind !== 'running' && u$3("button", {
         className: "px-3 py-1.5 rounded bg-brand text-white disabled:opacity-50",
@@ -51586,7 +51668,7 @@ function LanServerControls({
         children: host.kind === 'checking' ? '正在连接本机助手…' : startLabel
       }, void 0, false, {
         fileName: _jsxFileName$u,
-        lineNumber: 554,
+        lineNumber: 570,
         columnNumber: 11
       }, this), host.kind === 'error' && u$3("div", {
         className: "space-y-2",
@@ -51596,7 +51678,7 @@ function LanServerControls({
           children: host.message
         }, void 0, false, {
           fileName: _jsxFileName$u,
-          lineNumber: 565,
+          lineNumber: 581,
           columnNumber: 13
         }, this), u$3("button", {
           className: "px-3 py-1.5 rounded bg-brand text-white disabled:opacity-50",
@@ -51606,21 +51688,21 @@ function LanServerControls({
           children: installerState === 'working' ? '正在生成安装器…' : '下载一键安装脚本'
         }, void 0, false, {
           fileName: _jsxFileName$u,
-          lineNumber: 568,
+          lineNumber: 584,
           columnNumber: 13
         }, this), installerState === 'done' && u$3("p", {
           className: "text-sm text-green-700",
           children: "\u5DF2\u4E0B\u8F7D install-h-local.bat\u3002\u8BF7\u5728\u6D4F\u89C8\u5668\u4E0B\u8F7D\u680F\u6253\u5F00\u5B83\uFF1B\u82E5\u51FA\u73B0 SmartScreen \u63D0\u793A\uFF0C\u9009\u62E9\u201C\u4ECD\u8981\u8FD0\u884C\u201D\u3002"
         }, void 0, false, {
           fileName: _jsxFileName$u,
-          lineNumber: 579,
+          lineNumber: 595,
           columnNumber: 15
         }, this), installerState === 'error' && u$3("p", {
           className: "text-sm text-red-600",
           children: "\u5F53\u524D\u7CFB\u7EDF\u6682\u4E0D\u652F\u6301\u81EA\u52A8\u751F\u6210\u5B89\u88C5\u5668\uFF0C\u8BF7\u4F7F\u7528\u4E0B\u65B9\u547D\u4EE4\u3002"
         }, void 0, false, {
           fileName: _jsxFileName$u,
-          lineNumber: 585,
+          lineNumber: 601,
           columnNumber: 15
         }, this), getNativeHostInstallCommand() && u$3("div", {
           className: "flex items-center gap-2 text-sm",
@@ -51629,7 +51711,7 @@ function LanServerControls({
             children: getNativeHostInstallCommand()
           }, void 0, false, {
             fileName: _jsxFileName$u,
-            lineNumber: 591,
+            lineNumber: 607,
             columnNumber: 17
           }, this), u$3("button", {
             className: "px-2 py-1 rounded border hover:bg-grey-1",
@@ -51638,22 +51720,22 @@ function LanServerControls({
             children: installCommandCopied ? '已复制' : '复制安装命令'
           }, void 0, false, {
             fileName: _jsxFileName$u,
-            lineNumber: 594,
+            lineNumber: 610,
             columnNumber: 17
           }, this)]
         }, void 0, true, {
           fileName: _jsxFileName$u,
-          lineNumber: 590,
+          lineNumber: 606,
           columnNumber: 15
         }, this)]
       }, void 0, true, {
         fileName: _jsxFileName$u,
-        lineNumber: 564,
+        lineNumber: 580,
         columnNumber: 11
       }, this)]
     }, void 0, true, {
       fileName: _jsxFileName$u,
-      lineNumber: 510,
+      lineNumber: 526,
       columnNumber: 7
     }, this), u$3("section", {
       className: "space-y-2 border-t pt-4",
@@ -51662,25 +51744,37 @@ function LanServerControls({
         children: "\u52A0\u5165\u522B\u4EBA\u7684\u623F\u95F4"
       }, void 0, false, {
         fileName: _jsxFileName$u,
-        lineNumber: 608,
+        lineNumber: 624,
         columnNumber: 9
       }, this), u$3("p", {
         className: "text-sm text-grey-6",
         children: "\u7C98\u8D34\u4E3B\u6301\u4EBA\u5206\u4EAB\u7684\u5C40\u57DF\u7F51\u94FE\u63A5\u5373\u53EF\u52A0\u5165\u3002"
       }, void 0, false, {
         fileName: _jsxFileName$u,
-        lineNumber: 609,
+        lineNumber: 625,
         columnNumber: 9
       }, this), u$3("input", {
         className: "w-full border rounded p-2",
         placeholder: "http://192.168.1.10:8123",
         value: value,
-        onInput: e => setValue(e.target.value),
+        onInput: e => {
+          setValue(e.target.value);
+          setJoinError(null);
+        },
         "data-testid": "lan-server-input"
       }, void 0, false, {
         fileName: _jsxFileName$u,
-        lineNumber: 612,
+        lineNumber: 628,
         columnNumber: 9
+      }, this), joinError && u$3("p", {
+        className: "text-sm text-red-dark",
+        "data-testid": "lan-server-join-error",
+        role: "alert",
+        children: joinError
+      }, void 0, false, {
+        fileName: _jsxFileName$u,
+        lineNumber: 639,
+        columnNumber: 11
       }, this), u$3("div", {
         className: "flex justify-end gap-2",
         children: [onCancel && u$3("button", {
@@ -51690,21 +51784,21 @@ function LanServerControls({
           children: "\u53D6\u6D88"
         }, void 0, false, {
           fileName: _jsxFileName$u,
-          lineNumber: 621,
+          lineNumber: 649,
           columnNumber: 13
         }, this), u$3("button", {
           className: "px-3 py-1.5 rounded bg-brand text-white",
           "data-testid": "lan-server-save",
-          onClick: () => onSave(normalizeLanServerURL(value)),
+          onClick: saveAddress,
           children: "\u4FDD\u5B58\u5E76\u91CD\u8FDE"
         }, void 0, false, {
           fileName: _jsxFileName$u,
-          lineNumber: 629,
+          lineNumber: 657,
           columnNumber: 11
         }, this)]
       }, void 0, true, {
         fileName: _jsxFileName$u,
-        lineNumber: 619,
+        lineNumber: 647,
         columnNumber: 9
       }, this), savedServerURL && u$3("button", {
         className: "text-sm text-grey-6 underline",
@@ -51713,17 +51807,17 @@ function LanServerControls({
         children: "\u9000\u51FA\u623F\u95F4\uFF0C\u56DE\u5230\u672C\u5730\u6A21\u5F0F\uFF08\u623F\u95F4\u5185\u7684\u6279\u6CE8\u5C06\u4E0D\u518D\u663E\u793A\uFF09"
       }, void 0, false, {
         fileName: _jsxFileName$u,
-        lineNumber: 638,
+        lineNumber: 666,
         columnNumber: 11
       }, this)]
     }, void 0, true, {
       fileName: _jsxFileName$u,
-      lineNumber: 607,
+      lineNumber: 623,
       columnNumber: 7
     }, this)]
   }, void 0, true, {
     fileName: _jsxFileName$u,
-    lineNumber: 497,
+    lineNumber: 513,
     columnNumber: 5
   }, this);
 }
@@ -55334,16 +55428,6 @@ function normalizeServerURL(url) {
   return `${normalized}/`;
 }
 
-/** Return true if `url` points at a loopback address (127.0.0.1/localhost). */
-function isLoopbackURL(url) {
-  try {
-    const host = new URL(url).hostname;
-    return host === 'localhost' || host === '127.0.0.1' || host === '::1';
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Check whether the LAN annotation server at `serverURL` is actually serving.
  *
@@ -55375,13 +55459,25 @@ async function buildSettings(configFromSidebar, window_ = window) {
   // the host connects to the room started by the bundled native helper on
   // 127.0.0.1. With no saved address, the built-in data source applies.
   //
-  // Safety net: a saved loopback address only makes sense while the native
-  // helper is actually serving. If the helper was stopped (or never started
-  // after a browser restart) the saved address would point at a dead server
-  // and the sidebar would fail to load. In that case, drop the saved
-  // address and fall back to the built-in data source.
+  // Safety net for a saved LAN server address:
+  //
+  // 1. Addresses that are not plausible LAN addresses (e.g. an official
+  //    hyp.is share link pasted into the "join room" input) are dropped
+  //    immediately: routing the annotation API at a public website breaks
+  //    the sidebar.
+  // 2. Plausible addresses (loopback or LAN IP) are probed with a short
+  //    timeout. If nothing is serving there (host left, helper stopped),
+  //    drop the address and fall back to the built-in data source.
   let serverURL = window_.localStorage?.getItem?.('h-local.server') ?? '';
-  if (serverURL && isLoopbackURL(serverURL)) {
+  if (serverURL && !isPlausibleLanServerURL(serverURL)) {
+    serverURL = '';
+    try {
+      window_.localStorage?.removeItem?.('h-local.server');
+    } catch {
+      // Ignore storage errors; the in-memory fallback still applies.
+    }
+  }
+  if (serverURL) {
     const reachable = await canReachLocalServer(serverURL, window_);
     if (!reachable) {
       serverURL = '';

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 
+import { isPlausibleLanServerURL } from '../util/lan-server-url';
+
 export const LAN_SERVER_HOST_NAME = 'com.hlocal.server';
 export const LAN_SERVER_DEFAULT_PORT = 8123;
 export const LAN_SERVER_STORAGE_KEY = 'h-local.server';
@@ -404,10 +406,24 @@ export default function LanServerControls({
   startLabel = '启动房间',
 }: LanServerControlsProps) {
   const [value, setValue] = useState(savedServerURL);
+  const [joinError, setJoinError] = useState<string | null>(null);
   const [installCommandCopied, setInstallCommandCopied] = useState(false);
   const [installerState, setInstallerState] = useState<
     'idle' | 'working' | 'done' | 'error'
   >('idle');
+
+  /** Validate and save the address typed into the "join room" input. */
+  const saveAddress = useCallback(() => {
+    const trimmed = value.trim();
+    if (trimmed && !isPlausibleLanServerURL(trimmed)) {
+      setJoinError(
+        '这不是局域网房间地址。请粘贴同事分享的局域网链接（形如 http://192.168.x.x:8123），不要粘贴 hyp.is 等公网分享链接。',
+      );
+      return;
+    }
+    setJoinError(null);
+    onSave(normalizeLanServerURL(trimmed));
+  }, [onSave, value]);
 
   const installNativeHost = useCallback(async () => {
     setInstallerState('working');
@@ -613,9 +629,21 @@ export default function LanServerControls({
           className="w-full border rounded p-2"
           placeholder="http://192.168.1.10:8123"
           value={value}
-          onInput={e => setValue((e.target as HTMLInputElement).value)}
+          onInput={e => {
+            setValue((e.target as HTMLInputElement).value);
+            setJoinError(null);
+          }}
           data-testid="lan-server-input"
         />
+        {joinError && (
+          <p
+            className="text-sm text-red-dark"
+            data-testid="lan-server-join-error"
+            role="alert"
+          >
+            {joinError}
+          </p>
+        )}
         <div className="flex justify-end gap-2">
           {onCancel && (
             <button
@@ -629,7 +657,7 @@ export default function LanServerControls({
           <button
             className="px-3 py-1.5 rounded bg-brand text-white"
             data-testid="lan-server-save"
-            onClick={() => onSave(normalizeLanServerURL(value))}
+            onClick={saveAddress}
           >
             保存并重连
           </button>

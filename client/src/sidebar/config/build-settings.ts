@@ -7,6 +7,7 @@ import type {
   SidebarSettings,
 } from '../../types/config';
 import * as postMessageJsonRpc from '../util/postmessage-json-rpc';
+import { isPlausibleLanServerURL } from '../util/lan-server-url';
 import { getApiUrl } from './get-api-url';
 import { hostPageConfig } from './host-config';
 
@@ -145,16 +146,6 @@ function normalizeServerURL(url: string): string {
   return `${normalized}/`;
 }
 
-/** Return true if `url` points at a loopback address (127.0.0.1/localhost). */
-function isLoopbackURL(url: string): boolean {
-  try {
-    const host = new URL(url).hostname;
-    return host === 'localhost' || host === '127.0.0.1' || host === '::1';
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Check whether the LAN annotation server at `serverURL` is actually serving.
  *
@@ -193,13 +184,25 @@ export async function buildSettings(
   // the host connects to the room started by the bundled native helper on
   // 127.0.0.1. With no saved address, the built-in data source applies.
   //
-  // Safety net: a saved loopback address only makes sense while the native
-  // helper is actually serving. If the helper was stopped (or never started
-  // after a browser restart) the saved address would point at a dead server
-  // and the sidebar would fail to load. In that case, drop the saved
-  // address and fall back to the built-in data source.
+  // Safety net for a saved LAN server address:
+  //
+  // 1. Addresses that are not plausible LAN addresses (e.g. an official
+  //    hyp.is share link pasted into the "join room" input) are dropped
+  //    immediately: routing the annotation API at a public website breaks
+  //    the sidebar.
+  // 2. Plausible addresses (loopback or LAN IP) are probed with a short
+  //    timeout. If nothing is serving there (host left, helper stopped),
+  //    drop the address and fall back to the built-in data source.
   let serverURL = window_.localStorage?.getItem?.('h-local.server') ?? '';
-  if (serverURL && isLoopbackURL(serverURL)) {
+  if (serverURL && !isPlausibleLanServerURL(serverURL)) {
+    serverURL = '';
+    try {
+      window_.localStorage?.removeItem?.('h-local.server');
+    } catch {
+      // Ignore storage errors; the in-memory fallback still applies.
+    }
+  }
+  if (serverURL) {
     const reachable = await canReachLocalServer(serverURL, window_);
     if (!reachable) {
       serverURL = '';
