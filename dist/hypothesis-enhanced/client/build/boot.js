@@ -2,24 +2,24 @@
   'use strict';
 
   var manifest = {
-  	"scripts/annotator.bundle.js": "scripts/annotator.bundle.js?09761c",
-  	"styles/highlights.css.map": "styles/highlights.css.map?e0dd35",
   	"styles/annotator.css": "styles/annotator.css?2911a6",
-  	"scripts/ui-playground.bundle.js": "scripts/ui-playground.bundle.js?bf10cf",
   	"styles/annotator.css.map": "styles/annotator.css.map?0fa42e",
-  	"styles/highlights.css": "styles/highlights.css?f741a8",
-  	"styles/katex.min.css.map": "styles/katex.min.css.map?f4f041",
-  	"styles/pdfjs-overrides.css": "styles/pdfjs-overrides.css?d58df4",
   	"styles/pdfjs-overrides.css.map": "styles/pdfjs-overrides.css.map?5a12c5",
   	"styles/katex.min.css": "styles/katex.min.css?027dee",
+  	"styles/highlights.css": "styles/highlights.css?f741a8",
+  	"styles/highlights.css.map": "styles/highlights.css.map?e0dd35",
+  	"styles/katex.min.css.map": "styles/katex.min.css.map?f4f041",
+  	"styles/pdfjs-overrides.css": "styles/pdfjs-overrides.css?d58df4",
   	"styles/sidebar.css": "styles/sidebar.css?bab314",
-  	"styles/ui-playground.css": "styles/ui-playground.css?b42c18",
-  	"styles/sidebar.css.map": "styles/sidebar.css.map?21375b",
   	"styles/ui-playground.css.map": "styles/ui-playground.css.map?6a44d8",
-  	"scripts/annotator.bundle.js.map": "scripts/annotator.bundle.js.map?3eee87",
-  	"scripts/sidebar.bundle.js": "scripts/sidebar.bundle.js?16f68c",
-  	"scripts/ui-playground.bundle.js.map": "scripts/ui-playground.bundle.js.map?fb69d8",
-  	"scripts/sidebar.bundle.js.map": "scripts/sidebar.bundle.js.map?6507fc"
+  	"styles/sidebar.css.map": "styles/sidebar.css.map?21375b",
+  	"styles/ui-playground.css": "styles/ui-playground.css?b42c18",
+  	"scripts/annotator.bundle.js": "scripts/annotator.bundle.js?9e633e",
+  	"scripts/ui-playground.bundle.js": "scripts/ui-playground.bundle.js?0094f7",
+  	"scripts/annotator.bundle.js.map": "scripts/annotator.bundle.js.map?a4c4ff",
+  	"scripts/ui-playground.bundle.js.map": "scripts/ui-playground.bundle.js.map?e3d9d5",
+  	"scripts/sidebar.bundle.js": "scripts/sidebar.bundle.js?3ddd75",
+  	"scripts/sidebar.bundle.js.map": "scripts/sidebar.bundle.js.map?1cd84d"
   };
 
   /**
@@ -113,6 +113,7 @@
    * by omitting resources that are only needed in the host frame.
    */
   function bootHypothesisClient(doc, config) {
+    var _config$sidebarAppUrl;
     // Detect presence of Hypothesis in the page
     var appLinkEl = doc.querySelector('link[type="application/annotator+html"]');
     if (appLinkEl) {
@@ -131,10 +132,18 @@
     injectLink(doc, 'profile', 'html', config.profileAppUrl);
 
     // Preload the styles used by the shadow roots of annotator UI elements.
-    preloadURL(doc, 'style', assetURL(config, 'styles/annotator.css'), {
-      // Enable style rules to be accessed from JS. See notes in shadow-root.ts.
-      crossOrigin: true
-    });
+    // Skip this when running as a browser extension content script: the
+    // <link rel="preload"> is inserted from the page's main world while the
+    // annotator in the isolated world loads the stylesheet separately, which
+    // Chrome/Edge report as "cross-world extension resource mismatch".
+    // Extension assets come from local disk, so preloading has no benefit.
+    var isBrowserExtension = (_config$sidebarAppUrl = config.sidebarAppUrl) === null || _config$sidebarAppUrl === void 0 ? void 0 : _config$sidebarAppUrl.startsWith('chrome-extension://');
+    if (!isBrowserExtension) {
+      preloadURL(doc, 'style', assetURL(config, 'styles/annotator.css'), {
+        // Enable style rules to be accessed from JS. See notes in shadow-root.ts.
+        crossOrigin: true
+      });
+    }
 
     // Register the URL of the annotation client which is currently being used to drive
     // annotation interactions.

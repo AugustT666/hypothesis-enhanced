@@ -167,10 +167,20 @@ export function bootHypothesisClient(doc: Document, config: AnnotatorConfig) {
   injectLink(doc, 'profile', 'html', config.profileAppUrl);
 
   // Preload the styles used by the shadow roots of annotator UI elements.
-  preloadURL(doc, 'style', assetURL(config, 'styles/annotator.css'), {
-    // Enable style rules to be accessed from JS. See notes in shadow-root.ts.
-    crossOrigin: true,
-  });
+  // Skip this when running as a browser extension content script: the
+  // <link rel="preload"> is inserted from the page's main world while the
+  // annotator in the isolated world loads the stylesheet separately, which
+  // Chrome/Edge report as "cross-world extension resource mismatch".
+  // Extension assets come from local disk, so preloading has no benefit.
+  const isBrowserExtension = config.sidebarAppUrl?.startsWith(
+    'chrome-extension://',
+  );
+  if (!isBrowserExtension) {
+    preloadURL(doc, 'style', assetURL(config, 'styles/annotator.css'), {
+      // Enable style rules to be accessed from JS. See notes in shadow-root.ts.
+      crossOrigin: true,
+    });
+  }
 
   // Register the URL of the annotation client which is currently being used to drive
   // annotation interactions.
