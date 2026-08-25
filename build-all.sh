@@ -15,7 +15,12 @@ echo "==> 安装扩展依赖"
 
 echo "==> 构建扩展 (settings/chrome-local.json)"
 rm -rf browser-extension/build
-(cd browser-extension && make build SETTINGS_FILE=settings/chrome-local.json)
+if command -v make >/dev/null 2>&1; then
+  (cd browser-extension && make build SETTINGS_FILE=settings/chrome-local.json)
+else
+  # Windows Git Bash 无 make，用等价脚本
+  (cd browser-extension && bash build-ext-win.sh)
+fi
 rm -f browser-extension/build/tests.bundle.js browser-extension/build/tests.bundle.js.map
 rm -f browser-extension/build/scripts/test-inputs.js
 

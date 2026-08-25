@@ -182,8 +182,8 @@ var hypothesis = (function (exports) {
   var sentryPublicDSN = "";
   var browserIsChrome = true;
   var appType = "chrome-extension";
-  var version = "1.1766.0.8";
-  var versionName = "gfecb4e3.dirty";
+  var version = "null.null";
+  var versionName = "f60be8b";
   var rawSettings = {
   	buildType: buildType,
   	apiUrl: apiUrl,
