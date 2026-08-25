@@ -30,7 +30,29 @@ process.stdout.on('error', err => {
  *   exact commit and state of the repository.
  */
 function getVersion(buildType) {
-  const gitInfo = gitDescribeSync();
+  let gitInfo;
+  try {
+    gitInfo = gitDescribeSync();
+  } catch {
+    // Not a git repo (e.g. source downloaded as a zip): fall back to the
+    // package.json version so the manifest stays valid for browsers.
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(process.cwd(), 'package.json')),
+    );
+    return { version: `${pkg.version}.0`, versionName: 'source-zip' };
+  }
+
+  if (!gitInfo.semver) {
+    // Git repo without any tag: git-describe returns a null semver, which
+    // would produce an invalid manifest version like "null.null".
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(process.cwd(), 'package.json')),
+    );
+    return {
+      version: `${pkg.version}.${gitInfo.distance}`,
+      versionName: `${gitInfo.hash}${gitInfo.dirty ? '.dirty' : ''}`,
+    };
+  }
 
   if (buildType === 'production' && gitInfo.dirty) {
     throw new Error('cannot create production build with dirty git state!');

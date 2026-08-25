@@ -31,7 +31,14 @@ dist/hypothesis-enhanced
 
 默认本地模式开箱即用。需要多台设备共享批注时，打开扩展分享面板中的「局域网共享」即可创建或加入房间。
 
-首次作为房间主机时，浏览器安全策略要求注册一次 Native Messaging 助手；插件内会给出对应的安装命令，之后即可在插件里一键启动/停止房间。详见 [`local-h/README-native-host.md`](local-h/README-native-host.md)。
+首次作为房间主机时，浏览器安全策略要求注册一次 Native Messaging 助手：
+
+- **Windows**：在「局域网共享」面板点「下载一键安装脚本」，双击运行下载的 `install-h-local.bat`（需已安装 [Node.js](https://nodejs.org)），然后**完全重启浏览器**。也可手动运行 [`local-h/install-native-host.ps1`](local-h/install-native-host.ps1)。
+- **macOS / Linux**：按插件内给出的命令运行 `local-h/install-native-host.sh`，然后完全重启浏览器。
+
+之后即可在插件里一键启动/停止房间。详见 [`local-h/README-native-host.md`](local-h/README-native-host.md)。
+
+修改源码重新构建：`./build-all.sh`（Windows 在 Git Bash 中运行；首次需先 `cd client && node .yarn/releases/yarn-3.6.0.cjs install`）。
 
 ## 许可
 
