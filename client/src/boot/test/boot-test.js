@@ -139,6 +139,35 @@ describe('bootstrap', () => {
       assert.equal(preloadLinks[0].crossOrigin, 'anonymous');
     });
 
+    it('registers annotator stylesheet URL via non-fetching hint link when running as an extension', () => {
+      clock.tick(123);
+
+      bootHypothesisClient(iframe.contentDocument, {
+        sidebarAppUrl: 'chrome-extension://abcdef/client/app.html',
+        assetRoot: 'chrome-extension://abcdef/client/',
+        manifest: {
+          'styles/annotator.css': 'styles/annotator.1234.css',
+        },
+      });
+
+      // The URL must be discoverable by shadow-root.ts, without a preload
+      // that would trigger a cross-world extension resource mismatch.
+      const hint = iframe.contentDocument.querySelector(
+        'link[rel="hypothesis-asset-url"]',
+      );
+      assert.ok(hint);
+      assert.equal(
+        hint.href,
+        'chrome-extension://abcdef/client/build/styles/annotator.1234.css',
+      );
+      assert.isTrue(hint.hasAttribute('data-hypothesis-asset'));
+
+      const preloads = iframe.contentDocument.querySelectorAll(
+        'link[rel="preload"]',
+      );
+      assert.equal(preloads.length, 0);
+    });
+
     it('creates the link to the sidebar iframe', () => {
       runBoot('annotator');
 

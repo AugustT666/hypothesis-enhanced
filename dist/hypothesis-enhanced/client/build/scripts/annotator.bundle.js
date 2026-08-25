@@ -10364,8 +10364,10 @@
    * Load stylesheets for annotator UI components into the shadow DOM root.
    */
   function loadStyles(shadowRoot) {
-    // Find the preloaded stylesheet added by the boot script.
-    const url = document.querySelector('link[rel="preload"][href*="/build/styles/annotator.css"]')?.href;
+    // Find the stylesheet URL registered by the boot script. In web/Via contexts
+    // this is a `<link rel="preload">`; in browser-extension contexts it is a
+    // non-fetching `<link rel="hypothesis-asset-url">` hint element.
+    const url = document.querySelector('link[rel="preload"][href*="/build/styles/annotator.css"],' + 'link[rel="hypothesis-asset-url"][href*="/build/styles/annotator.css"]')?.href;
     if (!url) {
       return Promise.resolve();
     }

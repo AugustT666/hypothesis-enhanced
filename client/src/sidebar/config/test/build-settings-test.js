@@ -275,15 +275,22 @@ describe('sidebar/config/build-settings', () => {
       });
 
       it('switches any build to LAN mode when an address is saved', async () => {
+        const removeItem = sinon.stub();
         fakeWindow.localStorage = {
           getItem: sinon.stub().returns('192.168.1.10:8123'),
+          removeItem,
         };
+        // The address is only kept if the reachability probe succeeds.
+        fakeWindow.fetch = sinon.stub().resolves({ status: 200 });
+        fakeWindow.setTimeout = sinon.stub().returns(0);
+        fakeWindow.clearTimeout = sinon.stub();
         const result = await buildSettings(
           { localApi: true, noAuth: true },
           fakeWindow,
         );
         assert.isFalse(result.localApi);
         assert.equal(result.apiUrl, fakeApiUrl());
+        assert.notCalled(removeItem);
       });
 
       it('drops an unreachable saved loopback address and stays local', async () => {

@@ -23,10 +23,13 @@ export function resetPropertyStyleSheet() {
  * Load stylesheets for annotator UI components into the shadow DOM root.
  */
 function loadStyles(shadowRoot: ShadowRoot): Promise<void> {
-  // Find the preloaded stylesheet added by the boot script.
+  // Find the stylesheet URL registered by the boot script. In web/Via contexts
+  // this is a `<link rel="preload">`; in browser-extension contexts it is a
+  // non-fetching `<link rel="hypothesis-asset-url">` hint element.
   const url = (
     document.querySelector(
-      'link[rel="preload"][href*="/build/styles/annotator.css"]',
+      'link[rel="preload"][href*="/build/styles/annotator.css"],' +
+        'link[rel="hypothesis-asset-url"][href*="/build/styles/annotator.css"]',
     ) as HTMLLinkElement | undefined
   )?.href;
 

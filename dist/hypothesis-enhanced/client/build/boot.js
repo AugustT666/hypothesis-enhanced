@@ -2,24 +2,27 @@
   'use strict';
 
   var manifest = {
-  	"styles/annotator.css": "styles/annotator.css?2911a6",
-  	"styles/highlights.css": "styles/highlights.css?f741a8",
-  	"styles/annotator.css.map": "styles/annotator.css.map?0fa42e",
-  	"styles/highlights.css.map": "styles/highlights.css.map?e0dd35",
+  	"scripts/test-inputs.js": "scripts/test-inputs.js?3738f5",
+  	"styles/annotator.css": "styles/annotator.css?b96328",
+  	"styles/annotator.css.map": "styles/annotator.css.map?30381f",
+  	"styles/highlights.css": "styles/highlights.css?8cfa7f",
+  	"styles/highlights.css.map": "styles/highlights.css.map?e5f6ab",
   	"styles/katex.min.css": "styles/katex.min.css?027dee",
-  	"styles/katex.min.css.map": "styles/katex.min.css.map?f4f041",
   	"styles/pdfjs-overrides.css": "styles/pdfjs-overrides.css?d58df4",
+  	"styles/katex.min.css.map": "styles/katex.min.css.map?f4f041",
   	"styles/pdfjs-overrides.css.map": "styles/pdfjs-overrides.css.map?5a12c5",
-  	"styles/sidebar.css": "styles/sidebar.css?bab314",
-  	"styles/sidebar.css.map": "styles/sidebar.css.map?21375b",
-  	"styles/ui-playground.css": "styles/ui-playground.css?b42c18",
-  	"styles/ui-playground.css.map": "styles/ui-playground.css.map?6a44d8",
-  	"scripts/annotator.bundle.js": "scripts/annotator.bundle.js?9e633e",
+  	"styles/sidebar.css.map": "styles/sidebar.css.map?351164",
+  	"styles/sidebar.css": "styles/sidebar.css?fc6b27",
+  	"styles/ui-playground.css.map": "styles/ui-playground.css.map?4e54fe",
+  	"styles/ui-playground.css": "styles/ui-playground.css?96824a",
+  	"scripts/annotator.bundle.js": "scripts/annotator.bundle.js?97986e",
   	"scripts/ui-playground.bundle.js": "scripts/ui-playground.bundle.js?0094f7",
-  	"scripts/annotator.bundle.js.map": "scripts/annotator.bundle.js.map?a4c4ff",
+  	"scripts/annotator.bundle.js.map": "scripts/annotator.bundle.js.map?09b057",
   	"scripts/ui-playground.bundle.js.map": "scripts/ui-playground.bundle.js.map?e3d9d5",
   	"scripts/sidebar.bundle.js": "scripts/sidebar.bundle.js?a78e63",
-  	"scripts/sidebar.bundle.js.map": "scripts/sidebar.bundle.js.map?83c8df"
+  	"scripts/sidebar.bundle.js.map": "scripts/sidebar.bundle.js.map?83c8df",
+  	"scripts/tests.bundle.js": "scripts/tests.bundle.js?3366b9",
+  	"scripts/tests.bundle.js.map": "scripts/tests.bundle.js.map?db47af"
   };
 
   /**
@@ -73,6 +76,24 @@
     tagElement(link);
     doc.head.appendChild(link);
   }
+  /**
+   * Register the URL of a stylesheet used inside the annotator's shadow roots,
+   * without fetching or applying it in the host document.
+   *
+   * This is used instead of `<link rel="preload">` when running as a browser
+   * extension content script: a preload inserted from the page's main world
+   * while the annotator (isolated world) loads the stylesheet separately
+   * triggers a "cross-world extension resource mismatch" warning in
+   * Chrome/Edge. shadow-root.ts reads the URL back from this element.
+   */
+  function injectStyleURLHint(doc, url) {
+    var link = doc.createElement('link');
+    link.rel = 'hypothesis-asset-url';
+    link.href = url;
+    tagElement(link);
+    doc.head.appendChild(link);
+  }
+
   /**
    * Preload a URL using a `<link rel="preload" as="<type>" ...>` element
    *
@@ -131,14 +152,18 @@
     // Register the URL of the user profile app which the Hypothesis client should load.
     injectLink(doc, 'profile', 'html', config.profileAppUrl);
 
-    // Preload the styles used by the shadow roots of annotator UI elements.
-    // Skip this when running as a browser extension content script: the
-    // <link rel="preload"> is inserted from the page's main world while the
-    // annotator in the isolated world loads the stylesheet separately, which
-    // Chrome/Edge report as "cross-world extension resource mismatch".
-    // Extension assets come from local disk, so preloading has no benefit.
+    // Register the URL of the stylesheet used by the shadow roots of annotator
+    // UI elements, so that shadow-root.ts can load it into each shadow root.
+    //
+    // When running as a browser extension content script, use a non-fetching
+    // <link> element instead of <link rel="preload">. The preload is inserted
+    // from the page's main world while the annotator in the isolated world
+    // loads the stylesheet separately, which Chrome/Edge report as a
+    // "cross-world extension resource mismatch" warning.
     var isBrowserExtension = (_config$sidebarAppUrl = config.sidebarAppUrl) === null || _config$sidebarAppUrl === void 0 ? void 0 : _config$sidebarAppUrl.startsWith('chrome-extension://');
-    if (!isBrowserExtension) {
+    if (isBrowserExtension) {
+      injectStyleURLHint(doc, assetURL(config, 'styles/annotator.css'));
+    } else {
       preloadURL(doc, 'style', assetURL(config, 'styles/annotator.css'), {
         // Enable style rules to be accessed from JS. See notes in shadow-root.ts.
         crossOrigin: true

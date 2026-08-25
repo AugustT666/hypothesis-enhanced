@@ -103,6 +103,24 @@ type PreloadOptions = {
 };
 
 /**
+ * Register the URL of a stylesheet used inside the annotator's shadow roots,
+ * without fetching or applying it in the host document.
+ *
+ * This is used instead of `<link rel="preload">` when running as a browser
+ * extension content script: a preload inserted from the page's main world
+ * while the annotator (isolated world) loads the stylesheet separately
+ * triggers a "cross-world extension resource mismatch" warning in
+ * Chrome/Edge. shadow-root.ts reads the URL back from this element.
+ */
+function injectStyleURLHint(doc: Document, url: string) {
+  const link = doc.createElement('link');
+  link.rel = 'hypothesis-asset-url';
+  link.href = url;
+  tagElement(link);
+  doc.head.appendChild(link);
+}
+
+/**
  * Preload a URL using a `<link rel="preload" as="<type>" ...>` element
  *
  * This can be used to preload an API request or other resource which we know
@@ -166,16 +184,20 @@ export function bootHypothesisClient(doc: Document, config: AnnotatorConfig) {
   // Register the URL of the user profile app which the Hypothesis client should load.
   injectLink(doc, 'profile', 'html', config.profileAppUrl);
 
-  // Preload the styles used by the shadow roots of annotator UI elements.
-  // Skip this when running as a browser extension content script: the
-  // <link rel="preload"> is inserted from the page's main world while the
-  // annotator in the isolated world loads the stylesheet separately, which
-  // Chrome/Edge report as "cross-world extension resource mismatch".
-  // Extension assets come from local disk, so preloading has no benefit.
+  // Register the URL of the stylesheet used by the shadow roots of annotator
+  // UI elements, so that shadow-root.ts can load it into each shadow root.
+  //
+  // When running as a browser extension content script, use a non-fetching
+  // <link> element instead of <link rel="preload">. The preload is inserted
+  // from the page's main world while the annotator in the isolated world
+  // loads the stylesheet separately, which Chrome/Edge report as a
+  // "cross-world extension resource mismatch" warning.
   const isBrowserExtension = config.sidebarAppUrl?.startsWith(
     'chrome-extension://',
   );
-  if (!isBrowserExtension) {
+  if (isBrowserExtension) {
+    injectStyleURLHint(doc, assetURL(config, 'styles/annotator.css'));
+  } else {
     preloadURL(doc, 'style', assetURL(config, 'styles/annotator.css'), {
       // Enable style rules to be accessed from JS. See notes in shadow-root.ts.
       crossOrigin: true,
