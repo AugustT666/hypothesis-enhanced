@@ -89,7 +89,22 @@ const manifestSourceFiles = 'build/{scripts,styles}/*.{css,js,map}';
 
 gulp.task('build-boot-script', async () => {
   // Generate the manifest containing cache-busted asset URLs
-  await generateManifest({ pattern: manifestSourceFiles });
+  const manifest = await generateManifest({ pattern: manifestSourceFiles });
+  // On Windows `path.relative()` produces backslash-separated keys and values,
+  // which break runtime lookups such as `manifest['styles/annotator.css']` and
+  // produce "client/build/undefined" URLs. Normalize to forward slashes.
+  const normalized = Object.fromEntries(
+    Object.entries(manifest).map(([key, value]) => [
+      key.replaceAll('\\', '/'),
+      value.replaceAll('\\', '/'),
+    ]),
+  );
+  const { writeFile } = await import('node:fs/promises');
+  await writeFile(
+    'build/manifest.json',
+    JSON.stringify(normalized, null, 2),
+    'utf-8',
+  );
   // Generate the boot script template
   await buildJS('./rollup-boot.config.js');
   // Replace variables in the template with real URLs
