@@ -88,6 +88,10 @@ build/unload-client.js: src/unload-client.js
 build/pdfjs-%.js: src/pdfjs-%.js
 	cp $< $@
 build/pdfjs: src/vendor/pdfjs
+	@test -f $</build/pdf.js && test -f $</build/pdf.worker.js || \
+		(echo "ERROR: src/vendor/pdfjs/build/ is missing pdf.js / pdf.worker.js." >&2; \
+		 echo "PDF annotation will be broken. Run tools/update-pdfjs to restore them." >&2; \
+		 exit 1)
 	cp -R $< $@
 build/%: src/%
 	@mkdir -p $@

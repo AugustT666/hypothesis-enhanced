@@ -38,6 +38,13 @@ echo "==> 复制静态资源"
 cp src/unload-client.js build/unload-client.js
 cp src/pdfjs-init.js build/pdfjs-init.js
 cp -R src/vendor/pdfjs build/pdfjs
+# 校验 PDF.js 构建产物齐全（见 .gitignore 中的例外说明）；缺失会导致 PDF 批注失效。
+for f in pdf.js pdf.worker.js; do
+  test -f "build/pdfjs/build/$f" || {
+    echo "错误：src/vendor/pdfjs/build/ 缺少 $f。请运行 tools/update-pdfjs 恢复后重试。"
+    exit 1
+  }
+done
 for d in native-host help images options; do
   mkdir -p "build/$d"
   cp -R "src/$d/." "build/$d/"

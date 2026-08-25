@@ -3,6 +3,13 @@ dist/
 node_modules/
 coverage/
 
+# The vendored PDF.js viewer loads these from "../build/" relative to
+# web/viewer.html. They are fetched by tools/update-pdfjs and MUST be tracked:
+# PDF annotation silently breaks when they are missing from a fresh clone.
+# The broad "build/" rule above would otherwise ignore them.
+!src/vendor/pdfjs/build/
+!src/vendor/pdfjs/build/**
+
 .eslintcache
 
 # The client uses yarn rather than npm to manage the lockfile.

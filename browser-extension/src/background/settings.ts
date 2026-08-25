@@ -10,6 +10,12 @@ export type Settings = {
   serviceUrl: string;
   noAuth?: boolean;
   localApi?: boolean;
+
+  /**
+   * Official Hypothes.is API endpoint, baked into local-mode builds so the
+   * runtime "official service" option can use it (eg. for the badge count).
+   */
+  officialApiUrl?: string;
 };
 
 // nb. This will error if the build has not been run yet.
@@ -23,6 +29,7 @@ const settings: Settings = {
 
   // Ensure API url does not end with '/'
   apiUrl: rawSettings.apiUrl.replace(/\/$/, ''),
+  officialApiUrl: rawSettings.officialApiUrl?.replace(/\/$/, ''),
 };
 
 export default settings;

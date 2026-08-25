@@ -179,11 +179,14 @@ var hypothesis = (function (exports) {
   var oauthClientId = "local-no-auth-client";
   var noAuth = true;
   var localApi = true;
+  var officialApiUrl = "https://hypothes.is/api/";
+  var officialAuthDomain = "hypothes.is";
+  var officialOauthClientId = "fd23fe2e-7792-11e7-8e16-23e47a1799d4";
   var sentryPublicDSN = "";
   var browserIsChrome = true;
   var appType = "chrome-extension";
-  var version = "null.null";
-  var versionName = "f60be8b";
+  var version = "1.1766.0.10";
+  var versionName = "g33c6b45.dirty";
   var rawSettings = {
   	buildType: buildType,
   	apiUrl: apiUrl,
@@ -193,6 +196,9 @@ var hypothesis = (function (exports) {
   	oauthClientId: oauthClientId,
   	noAuth: noAuth,
   	localApi: localApi,
+  	officialApiUrl: officialApiUrl,
+  	officialAuthDomain: officialAuthDomain,
+  	officialOauthClientId: officialOauthClientId,
   	sentryPublicDSN: sentryPublicDSN,
   	browserIsChrome: browserIsChrome,
   	appType: appType,
@@ -200,13 +206,7 @@ var hypothesis = (function (exports) {
   	versionName: versionName
   };
 
-  /**
-   * Incomplete type for settings in the `settings.json` file.
-   *
-   * This contains only the settings that the background script uses. Other
-   * settings are used when generating the `manifest.json` file.
-   */
-
+  var _rawSettings$official;
 
   /**
    * Configuration data for the extension.
@@ -214,7 +214,8 @@ var hypothesis = (function (exports) {
   const settings = {
     ...rawSettings,
     // Ensure API url does not end with '/'
-    apiUrl: rawSettings.apiUrl.replace(/\/$/, '')
+    apiUrl: rawSettings.apiUrl.replace(/\/$/, ''),
+    officialApiUrl: (_rawSettings$official = rawSettings.officialApiUrl) === null || _rawSettings$official === void 0 ? void 0 : _rawSettings$official.replace(/\/$/, '')
   };
 
   // Each button state has two icons one for normal resolution (19) and one
@@ -1092,10 +1093,12 @@ var hypothesis = (function (exports) {
    * Queries the Hypothesis service that provides statistics about the annotations
    * for a given URL.
    *
+   * @param apiUrl - API root of the annotation service to query. Defaults to the
+   *   API configured at build time.
    * @throws Will throw a variety of errors: network, json parsing, or wrong format errors.
    */
-  async function fetchAnnotationCount(uri) {
-    const response = await fetch(settings.apiUrl + '/badge?uri=' + encodeUriQuery(uri), {
+  async function fetchAnnotationCount(uri, apiUrl = settings.apiUrl) {
+    const response = await fetch(apiUrl + '/badge?uri=' + encodeUriQuery(uri), {
       credentials: 'include'
     });
     const data = await response.json();
@@ -1254,8 +1257,9 @@ var hypothesis = (function (exports) {
      *
      * @param tabId The id of the tab.
      * @param tabUrl The URL of the tab.
+     * @param apiUrl API root of the annotation service to query.
      */
-    async updateAnnotationCount(tabId, tabUrl) {
+    async updateAnnotationCount(tabId, tabUrl, apiUrl) {
       const INITIAL_WAIT_MS = 1000;
       const MAX_WAIT_MS = 3000;
       const CACHE_EXPIRATION_MS = 3000;
@@ -1283,7 +1287,7 @@ var hypothesis = (function (exports) {
             return;
           }
           try {
-            count = await fetchAnnotationCount(url);
+            count = await fetchAnnotationCount(url, apiUrl);
             this._annotationCountCache.set(url, count);
             setTimeout(() => this._annotationCountCache.delete(url), CACHE_EXPIRATION_MS);
           } catch {
@@ -1654,10 +1658,34 @@ var hypothesis = (function (exports) {
           });
         }
       }
+
+      /**
+       * Whether the user is using the official Hypothes.is service.
+       *
+       * The runtime choice (extension options page) takes precedence; when the
+       * user has not made a choice, the built configuration applies: local
+       * builds default to local mode, official builds to the official service.
+       */
+      async function usesOfficialService() {
+        const {
+          serviceMode
+        } = await chromeAPI.storage.sync.get({
+          serviceMode: ''
+        });
+        if (serviceMode === 'official') {
+          return true;
+        }
+        if (serviceMode === 'local') {
+          return false;
+        }
+        return !(settings.localApi || settings.noAuth);
+      }
       async function updateAnnotationCountIfEnabled(tabId, url) {
-        // Local/no-auth builds don't have a remote badge service. The official
-        // public build keeps the upstream badge behavior.
-        if (settings.localApi || settings.noAuth) {
+        // The online badge service only exists for the official service:
+        // local/LAN modes don't have one. The runtime choice is honored so
+        // that switching to the official service enables badge counts without
+        // a rebuild.
+        if (!(await usesOfficialService())) {
           return;
         }
 
@@ -1669,7 +1697,7 @@ var hypothesis = (function (exports) {
           badge: true // the default value `true` is returned only if `badge` is not yet set.
         });
         if (badge) {
-          state.updateAnnotationCount(tabId, url);
+          state.updateAnnotationCount(tabId, url, settings.officialApiUrl ?? settings.apiUrl);
         }
       }
 

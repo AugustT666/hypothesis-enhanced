@@ -71,7 +71,24 @@ export type ConfigFromSidebar = {
   oauthClientId: string;
   rpcAllowedOrigins: string[];
   sentry?: SentryConfig;
+
+  /**
+   * Whether authentication is disabled (see {@link ConfigFromHost.noAuth}).
+   * Present in extension builds, where it is baked into the sidebar app HTML.
+   */
+  noAuth?: boolean;
   localApi?: boolean;
+
+  /**
+   * Endpoints for the official Hypothes.is service, baked into local-mode
+   * builds. When the user selects the 'official service' entry in the
+   * extension's settings page, the client switches to these values at
+   * runtime (see buildSettings in sidebar/config/build-settings.ts),
+   * enabling official account login and online sync without a rebuild.
+   */
+  officialApiUrl?: string;
+  officialAuthDomain?: string;
+  officialOauthClientId?: string;
 };
 
 /**

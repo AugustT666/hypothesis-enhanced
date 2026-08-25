@@ -392,10 +392,32 @@ export class Extension {
       }
     }
 
+    /**
+     * Whether the user is using the official Hypothes.is service.
+     *
+     * The runtime choice (extension options page) takes precedence; when the
+     * user has not made a choice, the built configuration applies: local
+     * builds default to local mode, official builds to the official service.
+     */
+    async function usesOfficialService() {
+      const { serviceMode } = await chromeAPI.storage.sync.get({
+        serviceMode: '',
+      });
+      if (serviceMode === 'official') {
+        return true;
+      }
+      if (serviceMode === 'local') {
+        return false;
+      }
+      return !(settings.localApi || settings.noAuth);
+    }
+
     async function updateAnnotationCountIfEnabled(tabId: number, url: string) {
-      // Local/no-auth builds don't have a remote badge service. The official
-      // public build keeps the upstream badge behavior.
-      if (settings.localApi || settings.noAuth) {
+      // The online badge service only exists for the official service:
+      // local/LAN modes don't have one. The runtime choice is honored so
+      // that switching to the official service enables badge counts without
+      // a rebuild.
+      if (!(await usesOfficialService())) {
         return;
       }
 
@@ -405,7 +427,11 @@ export class Extension {
         badge: true, // the default value `true` is returned only if `badge` is not yet set.
       });
       if (badge) {
-        state.updateAnnotationCount(tabId, url);
+        state.updateAnnotationCount(
+          tabId,
+          url,
+          settings.officialApiUrl ?? settings.apiUrl,
+        );
       }
     }
 

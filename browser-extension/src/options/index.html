@@ -42,10 +42,45 @@
   <body>
     <main>
       <h1>Hypothesis 增强版设置</h1>
+
+      <h2>账号与数据源</h2>
+      <fieldset id="service-mode-fieldset">
+        <div>
+          <input
+            type="radio"
+            id="service-local"
+            name="service-mode"
+            value="local"
+          />
+          <label for="service-local"><strong>本地模式（默认）</strong></label>
+          <p class="hint">
+            免登录，批注保存在浏览器本地，离线可用；局域网协作开箱即用。
+          </p>
+        </div>
+        <div>
+          <input
+            type="radio"
+            id="service-official"
+            name="service-mode"
+            value="official"
+          />
+          <label for="service-official"
+            ><strong>官方服务（Hypothes.is 账号）</strong></label>
+          <p class="hint">
+            使用官方 Hypothes.is 账号登录，批注与官方服务在线同步（包括官网
+            <code>hypothes.is</code> 上的批注）。选择后在新打开的页面中生效；
+            已打开的页面请刷新。若同时加入了「局域网房间」，房间优先，清除房间
+            地址后回到官方服务。
+          </p>
+        </div>
+      </fieldset>
+
+      <hr />
+
       <input type="checkbox" id="badge" />
       <label for="badge">启用官方服务批注计数徽章</label>
       <p class="hint">
-        仅在官方在线模式构建中生效；当前默认的本地免登录模式不会向官方服务请求批注计数。
+        选择「官方服务」后生效；本地免登录模式不会向官方服务请求批注计数。
       </p>
 
       <hr />

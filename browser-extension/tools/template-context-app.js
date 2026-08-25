@@ -35,6 +35,18 @@ function appSettings(settings) {
     result.localApi = settings.localApi;
   }
 
+  // Official Hypothes.is endpoints, baked into local-mode builds so users can
+  // switch to the official service at runtime (see options page).
+  if (settings.officialApiUrl) {
+    result.officialApiUrl = settings.officialApiUrl;
+  }
+  if (settings.officialAuthDomain) {
+    result.officialAuthDomain = settings.officialAuthDomain;
+  }
+  if (settings.officialOauthClientId) {
+    result.officialOauthClientId = settings.officialOauthClientId;
+  }
+
   return result;
 }
 

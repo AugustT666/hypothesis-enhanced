@@ -178,6 +178,43 @@ export async function buildSettings(
   configFromSidebar: ConfigFromSidebar,
   window_: Window = window,
 ): Promise<SidebarSettings> {
+  // 官方服务模式(运行时切换)。
+  //
+  // 用户在扩展设置页选择「官方服务」时,会在扩展源(所有扩展页面共享的
+  // localStorage)写入 h-local.service = 'official'。侧边栏 frame 与设置页
+  // 同源,启动时在这里读到该选择,并把数据源从内置的本地模式切换到官方
+  // Hypothes.is 服务:官方账号登录、批注在线同步,无需重新构建。
+  //
+  // 安全说明:切换目标只能是构建时内置的官方端点(officialApiUrl 等),
+  // 页面或脚本无法借此把数据发往任意地址。
+  //
+  // 优先级:若同时保存了局域网房间地址(见下方),局域网房间仍然生效;
+  // 清除房间地址后回到官方服务。
+  const serviceMode = window_.localStorage?.getItem?.('h-local.service') ?? '';
+  if (serviceMode === 'official') {
+    if (
+      configFromSidebar.officialApiUrl &&
+      configFromSidebar.officialOauthClientId
+    ) {
+      configFromSidebar = {
+        ...configFromSidebar,
+        apiUrl: configFromSidebar.officialApiUrl,
+        authDomain: configFromSidebar.officialAuthDomain ?? 'hypothes.is',
+        oauthClientId: configFromSidebar.officialOauthClientId,
+        noAuth: false,
+        localApi: false,
+      };
+    } else {
+      // 构建里没有内置官方服务配置(例如旧版本构建)。丢弃无效选择,
+      // 避免侧边栏因官方配置缺失而无法加载。
+      try {
+        window_.localStorage?.removeItem?.('h-local.service');
+      } catch {
+        // 忽略存储错误;本次会话仍回退到内置数据源。
+      }
+    }
+  }
+
   // A server address saved at runtime (via the LAN sharing controls in the
   // Share panel) switches this installation to LAN mode regardless of the
   // built configuration: peers join a room by pasting the host's link, and

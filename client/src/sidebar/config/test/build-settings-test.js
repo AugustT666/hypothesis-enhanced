@@ -314,5 +314,83 @@ describe('sidebar/config/build-settings', () => {
         assert.calledWith(removeItem, 'h-local.server');
       });
     });
+
+    context('official service mode (`h-local.service`)', () => {
+      const officialSettings = {
+        localApi: true,
+        noAuth: true,
+        apiUrl: 'chrome-extension://local/api/',
+        oauthClientId: 'local-no-auth-client',
+        officialApiUrl: 'https://hypothes.is/api/',
+        officialAuthDomain: 'hypothes.is',
+        officialOauthClientId: 'official-client-id',
+      };
+
+      it('stays in built-in mode when no service choice is saved', async () => {
+        fakeWindow.localStorage = {
+          getItem: sinon.stub().returns(null),
+        };
+        const result = await buildSettings(officialSettings, fakeWindow);
+        assert.isTrue(result.localApi);
+        assert.isTrue(result.noAuth);
+        assert.equal(result.oauthClientId, 'local-no-auth-client');
+        assert.equal(result.apiUrl, fakeApiUrl());
+      });
+
+      it('switches to the baked official endpoints when official is selected', async () => {
+        fakeWindow.localStorage = {
+          getItem: sinon
+            .stub()
+            .callsFake(key => (key === 'h-local.service' ? 'official' : null)),
+        };
+        // Make the (mocked) getApiUrl pass the settings' apiUrl through so
+        // the override is observable in the returned settings.
+        fakeApiUrl.callsFake(settings => settings.apiUrl);
+        const result = await buildSettings(officialSettings, fakeWindow);
+        assert.isFalse(result.localApi);
+        assert.isFalse(result.noAuth);
+        assert.equal(result.oauthClientId, 'official-client-id');
+        assert.equal(result.authDomain, 'hypothes.is');
+        assert.equal(result.apiUrl, 'https://hypothes.is/api/');
+      });
+
+      it('clears the choice and stays local when official endpoints are not baked', async () => {
+        const removeItem = sinon.stub();
+        fakeWindow.localStorage = {
+          getItem: sinon
+            .stub()
+            .callsFake(key => (key === 'h-local.service' ? 'official' : null)),
+          removeItem,
+        };
+        const result = await buildSettings(
+          { localApi: true, noAuth: true },
+          fakeWindow,
+        );
+        assert.isTrue(result.localApi);
+        assert.isTrue(result.noAuth);
+        assert.calledWith(removeItem, 'h-local.service');
+      });
+
+      it('lets a saved LAN room take precedence over the official choice', async () => {
+        fakeWindow.localStorage = {
+          getItem: sinon.stub().callsFake(key => {
+            if (key === 'h-local.service') {
+              return 'official';
+            }
+            if (key === 'h-local.server') {
+              return '192.168.1.10:8123';
+            }
+            return null;
+          }),
+        };
+        fakeWindow.fetch = sinon.stub().resolves({ status: 200 });
+        fakeWindow.setTimeout = sinon.stub().returns(0);
+        fakeWindow.clearTimeout = sinon.stub();
+        fakeApiUrl.callsFake(settings => settings.apiUrl);
+        const result = await buildSettings(officialSettings, fakeWindow);
+        assert.isFalse(result.localApi);
+        assert.equal(result.apiUrl, 'http://192.168.1.10:8123/api/');
+      });
+    });
   });
 });

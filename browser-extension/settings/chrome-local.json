@@ -11,6 +11,10 @@
   "noAuth": true,
   "localApi": true,
 
+  "officialApiUrl": "https://hypothes.is/api/",
+  "officialAuthDomain": "hypothes.is",
+  "officialOauthClientId": "fd23fe2e-7792-11e7-8e16-23e47a1799d4",
+
   "sentryPublicDSN": "",
 
   "browserIsChrome": true,

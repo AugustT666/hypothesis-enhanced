@@ -51,11 +51,16 @@ export function uriForBadgeRequest(uri: string) {
  * Queries the Hypothesis service that provides statistics about the annotations
  * for a given URL.
  *
+ * @param apiUrl - API root of the annotation service to query. Defaults to the
+ *   API configured at build time.
  * @throws Will throw a variety of errors: network, json parsing, or wrong format errors.
  */
-export async function fetchAnnotationCount(uri: string): Promise<number> {
+export async function fetchAnnotationCount(
+  uri: string,
+  apiUrl: string = settings.apiUrl,
+): Promise<number> {
   const response = await fetch(
-    settings.apiUrl + '/badge?uri=' + encodeUriQuery(uri),
+    apiUrl + '/badge?uri=' + encodeUriQuery(uri),
     {
       credentials: 'include',
     },

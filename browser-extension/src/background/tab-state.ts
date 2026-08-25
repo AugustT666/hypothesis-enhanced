@@ -193,8 +193,13 @@ export class TabState {
    *
    * @param tabId The id of the tab.
    * @param tabUrl The URL of the tab.
+   * @param apiUrl API root of the annotation service to query.
    */
-  async updateAnnotationCount(tabId: number, tabUrl: string) {
+  async updateAnnotationCount(
+    tabId: number,
+    tabUrl: string,
+    apiUrl?: string,
+  ) {
     const INITIAL_WAIT_MS = 1000;
     const MAX_WAIT_MS = 3000;
     const CACHE_EXPIRATION_MS = 3000;
@@ -230,7 +235,7 @@ export class TabState {
         }
 
         try {
-          count = await uriInfo.fetchAnnotationCount(url);
+          count = await uriInfo.fetchAnnotationCount(url, apiUrl);
           this._annotationCountCache.set(url, count);
           setTimeout(
             () => this._annotationCountCache.delete(url),
